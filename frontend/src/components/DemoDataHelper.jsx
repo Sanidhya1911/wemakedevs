@@ -90,10 +90,11 @@ export default function DemoDataHelper({ onDataChanged }) {
         notes: 'Backup tanker requested for next shift'
       });
 
-      // 3. Seed Verified Real Outcomes
+      // 3. Seed Multi-Hazard Verified Real Outcomes
+      // 3A. Heat outcomes
       await api.recordOutcome({
         ward_id: 'W1',
-        measurement_date: '2026-06-01',
+        measurement_date: '2026-08-13',
         hazard_type: 'heat',
         action_id: act1.action_id,
         hospital_heat_admissions: 12,
@@ -106,21 +107,8 @@ export default function DemoDataHelper({ onDataChanged }) {
       });
 
       await api.recordOutcome({
-        ward_id: 'W1',
-        measurement_date: '2026-06-02',
-        hazard_type: 'heat',
-        hospital_heat_admissions: 10,
-        emergency_108_calls: 6,
-        water_scarcity_complaints: 0,
-        data_source: 'AMC_HEALTH_SURVEILLANCE',
-        provenance: 'REAL',
-        data_quality_score: 1.0,
-        verification_notes: 'Day 2 surveillance follow-up'
-      });
-
-      await api.recordOutcome({
-        ward_id: 'W1',
-        measurement_date: '2026-06-03',
+        ward_id: 'W4',
+        measurement_date: '2026-08-12',
         hazard_type: 'heat',
         hospital_heat_admissions: 7,
         emergency_108_calls: 4,
@@ -128,26 +116,71 @@ export default function DemoDataHelper({ onDataChanged }) {
         data_source: 'AMC_HEALTH_SURVEILLANCE',
         provenance: 'REAL',
         data_quality_score: 1.0,
-        verification_notes: 'Day 3 post-cooling center operation'
+        verification_notes: 'Bapunagar UPHC heat triage'
+      });
+
+      // 3B. Waterlogging outcomes
+      await api.recordOutcome({
+        ward_id: 'W2',
+        measurement_date: '2026-08-13',
+        hazard_type: 'waterlogging',
+        action_id: act2.action_id,
+        hospital_heat_admissions: 0,
+        emergency_108_calls: 0,
+        water_scarcity_complaints: 0,
+        waterlogging_depth_cm: 35.0,
+        data_source: 'AMC_ENGINEERING_FLOOD_CELL',
+        provenance: 'REAL',
+        data_quality_score: 1.0,
+        verification_notes: 'Behrampura depression post-pumping water level measurement'
+      });
+
+      await api.recordOutcome({
+        ward_id: 'W3',
+        measurement_date: '2026-08-12',
+        hazard_type: 'waterlogging',
+        hospital_heat_admissions: 0,
+        emergency_108_calls: 0,
+        water_scarcity_complaints: 0,
+        waterlogging_depth_cm: 45.0,
+        data_source: 'AMC_ENGINEERING_FLOOD_CELL',
+        provenance: 'REAL',
+        data_quality_score: 1.0,
+        verification_notes: 'Asarwa underpass pluvial flood depth logged by acoustic depth gauge'
+      });
+
+      // 3C. Water shortage outcomes
+      await api.recordOutcome({
+        ward_id: 'W7',
+        measurement_date: '2026-08-13',
+        hazard_type: 'water_shortage',
+        hospital_heat_admissions: 0,
+        emergency_108_calls: 0,
+        water_scarcity_complaints: 34,
+        data_source: 'CCRS_CIVIC_HELPLINE_155303',
+        provenance: 'REAL',
+        data_quality_score: 1.0,
+        verification_notes: 'Vatva GIDC residential sector low terminal pressure complaints'
+      });
+
+      await api.recordOutcome({
+        ward_id: 'W2',
+        measurement_date: '2026-08-12',
+        hazard_type: 'water_shortage',
+        action_id: act3.action_id,
+        hospital_heat_admissions: 0,
+        emergency_108_calls: 0,
+        water_scarcity_complaints: 26,
+        data_source: 'CCRS_CIVIC_HELPLINE_155303',
+        provenance: 'REAL',
+        data_quality_score: 1.0,
+        verification_notes: 'Behrampura tanker dispatch delay escalation'
       });
 
       // Also seed W9 comparison control outcome for DiD
       await api.recordOutcome({
         ward_id: 'W9',
-        measurement_date: '2026-06-01',
-        hazard_type: 'heat',
-        hospital_heat_admissions: 6,
-        emergency_108_calls: 3,
-        water_scarcity_complaints: 0,
-        data_source: 'AMC_HEALTH_SURVEILLANCE',
-        provenance: 'REAL',
-        data_quality_score: 0.95,
-        verification_notes: 'Comparison control ward baseline'
-      });
-
-      await api.recordOutcome({
-        ward_id: 'W9',
-        measurement_date: '2026-06-02',
+        measurement_date: '2026-08-13',
         hazard_type: 'heat',
         hospital_heat_admissions: 5,
         emergency_108_calls: 3,
@@ -155,7 +188,7 @@ export default function DemoDataHelper({ onDataChanged }) {
         data_source: 'AMC_HEALTH_SURVEILLANCE',
         provenance: 'REAL',
         data_quality_score: 0.95,
-        verification_notes: 'Comparison control ward day 2'
+        verification_notes: 'Comparison control ward baseline'
       });
 
       // 4. Trigger statistical evaluation

@@ -6,6 +6,7 @@ export default function InterventionPlannerPage() {
   const [crew, setCrew] = useState(40);
   const [waterCap, setWaterCap] = useState(30000);
   const [equitySlider, setEquitySlider] = useState(0.5);
+  const [selectedScenario, setSelectedScenario] = useState('compound_hazard');
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [error, setError] = useState(null);
   const [solverResult, setSolverResult] = useState(null);
@@ -20,6 +21,7 @@ export default function InterventionPlannerPage() {
         total_crew_members: crew,
         total_water_cap_l: waterCap,
         equity_slider: equitySlider,
+        scenario_id: selectedScenario,
       });
       setSolverResult(res);
     } catch (err) {
@@ -28,7 +30,7 @@ export default function InterventionPlannerPage() {
     } finally {
       setIsOptimizing(false);
     }
-  }, [budget, crew, waterCap, equitySlider]);
+  }, [budget, crew, waterCap, equitySlider, selectedScenario]);
 
   useEffect(() => {
     runOptimizer();
@@ -69,6 +71,15 @@ export default function InterventionPlannerPage() {
   const wardAllocations = solverResult?.ward_allocations ? Object.entries(solverResult.ward_allocations) : [];
   const summary = solverResult?.summary;
 
+  // Multi-hazard intervention domain tallies
+  const domainCounts = wardAllocations.reduce((acc, [, wData]) => {
+    for (const it of wData.interventions || []) {
+      const t = it.risk_type || 'heat';
+      acc[t] = (acc[t] || 0) + (it.units || 1);
+    }
+    return acc;
+  }, { heat: 0, waterlogging: 0, water_shortage: 0 });
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -80,14 +91,14 @@ export default function InterventionPlannerPage() {
             <span className="text-primary font-bold">Intervention Planner</span>
           </div>
           <h1 className="text-headline-md font-headline-md text-primary font-bold">
-            Municipal Resource Allocation & What-If Optimizer
+            Municipal Resource Allocation &amp; What-If Optimizer
           </h1>
           <p className="text-xs text-on-surface-variant mt-0.5">
-            Integer Linear Programming (ILP) solver matching resource constraints against multi-hazard ward vulnerability.
+            Integer Linear Programming (ILP) solver matching resource constraints against multi-hazard ward vulnerability across Heat &amp; Water domains.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {wardAllocations.length > 0 && (
             <button
               onClick={handleDispatchPlanToActionCentre}
@@ -109,6 +120,59 @@ export default function InterventionPlannerPage() {
             </span>
             <span>{isOptimizing ? 'Optimizing (<200ms)...' : 'Run Resource Optimization'}</span>
           </button>
+        </div>
+      </div>
+
+      {/* Climate Scenario & Multi-Hazard Focus Selector */}
+      <div className="bg-surface-container-lowest p-4 rounded-xl border border-outline-variant flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+        <div>
+          <div className="text-xs font-bold text-primary flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[16px] text-primary">cyclone</span>
+            <span>Hazard Scenario &amp; Domain Focus:</span>
+          </div>
+          <span className="text-[11px] text-outline">
+            Select emergency context to test multi-hazard resource allocation (Waterlogging vs Water Shortage vs Heatwave)
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {[
+            { id: 'compound_hazard', label: '⚡ Compound Hazard (Heat + Flood)' },
+            { id: 'monsoon_cloudburst', label: '🌊 Monsoon Cloudburst (Waterlogging)' },
+            { id: 'summer_drought_scarcity', label: '💧 Summer Drought (Water Scarcity)' },
+            { id: 'heatwave_emergency', label: '☀️ Extreme Heatwave (Heat Focus)' }
+          ].map(s => (
+            <button
+              key={s.id}
+              onClick={() => setSelectedScenario(s.id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                selectedScenario === s.id
+                  ? 'bg-primary text-white border-primary shadow-xs'
+                  : 'bg-surface-container-lowest text-on-surface-variant border-outline-variant hover:bg-slate-50'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Domain Allocations Breakdown Bar */}
+      <div className="grid grid-cols-3 gap-3 bg-slate-900/5 p-3 rounded-xl border border-slate-200">
+        <div className="flex items-center gap-2 text-xs">
+          <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+          <span className="text-outline font-mono">Heat Actions:</span>
+          <strong className="font-bold text-rose-800">{domainCounts.heat} units</strong>
+        </div>
+        <div className="flex items-center gap-2 text-xs">
+          <span className="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
+          <span className="text-outline font-mono">Waterlogging Actions:</span>
+          <strong className="font-bold text-cyan-800">{domainCounts.waterlogging} units</strong>
+        </div>
+        <div className="flex items-center gap-2 text-xs">
+          <span className="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
+          <span className="text-outline font-mono">Water Shortage Actions:</span>
+          <strong className="font-bold text-sky-800">{domainCounts.water_shortage} units</strong>
         </div>
       </div>
 
@@ -310,23 +374,37 @@ export default function InterventionPlannerPage() {
 
                   {/* Interventions for this ward */}
                   <div className="space-y-1.5 pl-2">
-                    {wData.interventions?.map((it, itIdx) => (
-                      <div key={itIdx} className="flex items-start justify-between gap-2 text-[11px]">
-                        <div className="flex items-start gap-1.5">
-                          <span className="material-symbols-outlined text-[14px] text-primary mt-0.5">check</span>
-                          <div>
-                            <span className="font-semibold text-primary">{it.action_name}</span>
-                            <span className="text-outline font-mono ml-1.5">({it.units || 1} units)</span>
-                            <p className="text-[10px] text-on-surface-variant font-sans mt-0.5">
-                              {it.reason_for_recommendation}
-                            </p>
+                    {wData.interventions?.map((it, itIdx) => {
+                      const rType = it.risk_type || 'heat';
+                      return (
+                        <div key={itIdx} className="flex items-start justify-between gap-2 text-[11px] p-2 rounded-lg bg-surface-container-lowest/80 border border-outline-variant/40">
+                          <div className="flex items-start gap-1.5">
+                            <span className="material-symbols-outlined text-[14px] text-primary mt-0.5">check</span>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-semibold text-primary">{it.action_name}</span>
+                                <span className="text-outline font-mono text-[10px]">({it.units || 1} units)</span>
+                                <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold font-mono ${
+                                  rType === 'waterlogging'
+                                    ? 'bg-cyan-100 text-cyan-800 border border-cyan-300'
+                                    : rType === 'water_shortage'
+                                    ? 'bg-sky-100 text-sky-800 border border-sky-300'
+                                    : 'bg-rose-100 text-rose-800 border border-rose-300'
+                                }`}>
+                                  {rType === 'waterlogging' ? '🌊 Waterlogging' : rType === 'water_shortage' ? '💧 Water Shortage' : '☀️ Heat'}
+                                </span>
+                              </div>
+                              <p className="text-[10px] text-on-surface-variant font-sans mt-0.5">
+                                {it.reason_for_recommendation}
+                              </p>
+                            </div>
                           </div>
+                          <span className="font-mono text-outline shrink-0 font-semibold">
+                            ₹{(it.cost_inr || it.estimated_cost_inr || 0).toLocaleString()}
+                          </span>
                         </div>
-                        <span className="font-mono text-outline shrink-0">
-                          ₹{(it.cost_inr || it.estimated_cost_inr || 0).toLocaleString()}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               ))}

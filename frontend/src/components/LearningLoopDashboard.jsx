@@ -68,7 +68,7 @@ export default function LearningLoopDashboard() {
       ] = await Promise.all([
         api.getPredictions({ limit: 150 }).catch(() => ({ predictions: [] })),
         api.getActions({ limit: 100 }).catch(() => ({ actions: [] })),
-        api.getOutcomes({ limit: 100 }).catch(() => ({ outcomes: [] })),
+        api.getOutcomes({ limit: 200 }).catch(() => ({ outcomes: [] })),
         api.getEvaluations(20).catch(() => ({ evaluations: [] })),
         api.getProposals().catch(() => ({ proposals: [] })),
         api.getVersions().catch(() => ({ versions: [] })),

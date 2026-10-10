@@ -22,8 +22,11 @@ export const api = {
   // System Health
   checkHealth: async () => {
     try {
-      const res = await fetch('/');
-      return await handleResponse(res);
+      const res = await fetch(`${API_BASE}/learning/active-parameters`);
+      if (res.ok) {
+        return { status: 'OPERATIONAL' };
+      }
+      return { status: 'OFFLINE' };
     } catch (e) {
       return { status: 'OFFLINE', error: e.message };
     }
@@ -83,7 +86,8 @@ export const api = {
     if (params.ward_id) query.append('ward_id', params.ward_id);
     if (params.provenance) query.append('provenance', params.provenance);
     if (params.action_id) query.append('action_id', params.action_id);
-    query.append('limit', params.limit || '100');
+    if (params.hazard_type) query.append('hazard_type', params.hazard_type);
+    query.append('limit', params.limit || '150');
     const res = await fetch(`${API_BASE}/learning/outcomes?${query.toString()}`);
     return await handleResponse(res);
   },

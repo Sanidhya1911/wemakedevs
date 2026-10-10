@@ -21,7 +21,8 @@ from backend.optimizer import (
     solve_resource_allocation,
     optimize_from_combined_climate_results,
     RISK_CATEGORY_INTERVENTION_MAP,
-    INTERVENTIONS
+    INTERVENTIONS,
+    DEFAULT_WARDS
 )
 from backend.water_engine import (
     assess_citywide_water_risk,
@@ -49,7 +50,6 @@ from backend.data_sources import (
     DataFusionEngine,
     DataSourcesService
 )
-<<<<<<< HEAD
 from backend.learning_loop import (
     PredictionRecordCreate,
     BatchRecommendationCreate,
@@ -74,7 +74,19 @@ from backend.impact_verification import (
     ImpactVerificationRequest,
     verify_intervention_impact,
     get_verification,
-    list_verifications
+    list_verifications,
+    assess_intervention_impact,
+    record_impact_assessment,
+    retrieve_impact_assessment,
+    list_impact_assessments,
+    retrieve_assessment_history,
+    update_impact_assessment,
+    generate_impact_verification_summary,
+    export_learning_loop_signals,
+    ExecutionStatus,
+    SourceType,
+    QualityStatus,
+    ATTRIBUTION_DISCLAIMER
 )
 from backend.learning_engine import (
     ModelEvaluationRequest,
@@ -91,7 +103,6 @@ from backend.learning_engine import (
     list_model_versions,
     rollback_model_version
 )
-=======
 from backend.action_centre import (
     get_action_store,
     generate_actions_from_climate_risk,
@@ -108,22 +119,7 @@ from backend.action_centre import (
     VALID_STATUSES,
     HUMAN_APPROVAL_NOTICE as ACTION_CENTRE_ADVISORY,
 )
-from backend.impact_verification import (
-    assess_intervention_impact,
-    record_impact_assessment,
-    retrieve_impact_assessment,
-    list_impact_assessments,
-    retrieve_assessment_history,
-    update_impact_assessment,
-    generate_impact_verification_summary,
-    export_learning_loop_signals,
-    ExecutionStatus,
-    SourceType,
-    QualityStatus,
-    ATTRIBUTION_DISCLAIMER
-)
 from backend.database import DuplicateAssessmentError
->>>>>>> 9032aed4cb1e1ae4bba390235661fb8e2307eb8e
 
 app = FastAPI(
     title="ClimateShield API - Ahmedabad Heat Decision Support",
@@ -151,6 +147,7 @@ class OptimizationRequest(BaseModel):
     total_crew_members: int = Field(40, ge=1, le=500, description="Total available deployment personnel")
     total_water_cap_l: float = Field(30000.0, ge=1000, le=500000, description="Daily water cap limit in Liters")
     equity_slider: float = Field(0.5, ge=0.0, le=1.0, description="Equity priority slider (0.0 = pure efficiency, 1.0 = maximum equity)")
+    scenario_id: Optional[str] = Field(None, description="Optional climate scenario preset: monsoon_cloudburst, summer_drought_scarcity, compound_hazard, heatwave_emergency")
     wards: Optional[List[Dict[str, Any]]] = Field(None, description="Optional custom ward risk assessments to optimize")
 
 
@@ -184,7 +181,6 @@ def read_root():
             "/api/data-sources/era5",
             "/api/data-sources/ecostress",
             "/api/data-sources/fusion",
-<<<<<<< HEAD
             "/api/learning/predictions",
             "/api/learning/recommendations",
             "/api/learning/actions",
@@ -194,8 +190,7 @@ def read_root():
             "/api/impact/verifications",
             "/api/learning/evaluate",
             "/api/learning/active-parameters",
-            "/api/learning/versions"
-=======
+            "/api/learning/versions",
             "/api/action-centre/dashboard",
             "/api/action-centre/actions",
             "/api/action-centre/actions/{action_id}",
@@ -206,8 +201,7 @@ def read_root():
             "/api/impact/assessments/{assessment_id}",
             "/api/impact/wards/{ward_id}",
             "/api/impact/summary",
-            "/api/impact/learning-signals",
->>>>>>> 9032aed4cb1e1ae4bba390235661fb8e2307eb8e
+            "/api/impact/learning-signals"
         ]
     }
 
@@ -303,14 +297,37 @@ def get_ward_risk_monte_carlo(
 def run_optimization(req: OptimizationRequest):
     """
     Runs Knapsack Resource Allocation Optimization under budget, crew, water constraints and equity slider controls.
+    Supports multi-hazard scenario presets: monsoon_cloudburst, summer_drought_scarcity, compound_hazard, heatwave_emergency.
     """
     try:
+        target_wards = req.wards
+        if not target_wards:
+            import copy
+            target_wards = copy.deepcopy(DEFAULT_WARDS)
+            if req.scenario_id == "monsoon_cloudburst":
+                for w in target_wards:
+                    w["waterlogging_score"] = min(100.0, w.get("waterlogging_score", 50.0) * 1.35 + 15.0)
+                    w["heat_risk_score"] = max(20.0, w.get("heat_risk_score", 50.0) * 0.45)
+            elif req.scenario_id == "summer_drought_scarcity":
+                for w in target_wards:
+                    w["water_shortage_score"] = min(100.0, w.get("water_shortage_score", 30.0) * 2.2 + 20.0)
+                    w["waterlogging_score"] = 0.0
+            elif req.scenario_id == "heatwave_emergency":
+                for w in target_wards:
+                    w["heat_risk_score"] = min(100.0, w.get("heat_risk_score", 50.0) * 1.25 + 10.0)
+                    w["waterlogging_score"] = max(10.0, w.get("waterlogging_score", 50.0) * 0.3)
+            elif req.scenario_id == "compound_hazard":
+                for w in target_wards:
+                    w["heat_risk_score"] = min(100.0, w.get("heat_risk_score", 50.0) * 1.15)
+                    w["waterlogging_score"] = min(100.0, w.get("waterlogging_score", 50.0) * 1.2)
+                    w["is_compound_hotspot"] = True
+
         result = solve_resource_allocation(
             total_budget_inr=req.total_budget_inr,
             total_crew_members=req.total_crew_members,
             total_water_cap_l=req.total_water_cap_l,
             equity_slider=req.equity_slider,
-            wards=req.wards
+            wards=target_wards
         )
         return result
     except Exception as e:
@@ -1140,7 +1157,6 @@ async def optimize_from_fused_data(req: FusedOptimizationRequest):
 
 
 # -------------------------------------------------------------
-<<<<<<< HEAD
 # LEARNING LOOP: DATA RECORDING & LINEAGE ENDPOINTS
 # -------------------------------------------------------------
 
@@ -1293,13 +1309,14 @@ async def get_verified_outcome_records(
     provenance: Optional[str] = Query(None, description="Filter by provenance: REAL, ESTIMATED, SIMULATED, UNVERIFIED"),
     prediction_id: Optional[str] = Query(None, description="Filter by linked prediction ID"),
     action_id: Optional[str] = Query(None, description="Filter by linked executed action ID"),
-    limit: int = Query(50, ge=1, le=200)
+    hazard_type: Optional[str] = Query(None, description="Filter by hazard type: heat, waterlogging, water_shortage"),
+    limit: int = Query(100, ge=1, le=500)
 ):
     """
     Lists verified municipal outcomes with provenance indicators.
     """
     try:
-        return {"outcomes": list_outcomes(ward_id=ward_id, provenance=provenance, prediction_id=prediction_id, action_id=action_id, limit=limit)}
+        return {"outcomes": list_outcomes(ward_id=ward_id, provenance=provenance, prediction_id=prediction_id, action_id=action_id, hazard_type=hazard_type, limit=limit)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to query outcomes: {str(e)}")
 
@@ -1521,12 +1538,7 @@ async def rollback_version_endpoint(version_id: str, req: ProposalApprovalReques
         raise HTTPException(status_code=404 if "not found" in str(e).lower() else 422, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to rollback version: {str(e)}")
-
-
-
-
-
-=======
+# -------------------------------------------------------------
 # ACTION CENTRE ENDPOINTS
 # -------------------------------------------------------------
 
@@ -2099,4 +2111,3 @@ async def get_learning_loop_signals_endpoint(
         "data_integrity_mode": "INCLUDES_SIMULATED_DEMO" if include_synthetic else "REAL_WORLD_VERIFIED_ONLY",
         "signals": signals
     }
->>>>>>> 9032aed4cb1e1ae4bba390235661fb8e2307eb8e

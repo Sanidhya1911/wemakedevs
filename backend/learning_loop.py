@@ -687,6 +687,7 @@ def list_outcomes(
     provenance: Optional[str] = None,
     prediction_id: Optional[str] = None,
     action_id: Optional[str] = None,
+    hazard_type: Optional[str] = None,
     limit: int = 50
 ) -> List[Dict[str, Any]]:
     """Lists verified outcomes with relational filtering."""
@@ -708,6 +709,9 @@ def list_outcomes(
     if action_id:
         query += " AND action_id = ?"
         params.append(action_id)
+    if hazard_type:
+        query += " AND hazard_type = ?"
+        params.append(hazard_type)
 
     query += " ORDER BY measurement_date DESC, created_at DESC LIMIT ?;"
     params.append(limit)

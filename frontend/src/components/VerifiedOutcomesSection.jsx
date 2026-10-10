@@ -35,8 +35,31 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const [selectedDomain, setSelectedDomain] = useState('ALL'); // 'ALL', 'heat', 'waterlogging', 'water_shortage'
+  const [selectedWard, setSelectedWard] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const heatCount = outcomes.filter(o => o.hazard_type === 'heat').length;
+  const waterloggingCount = outcomes.filter(o => o.hazard_type === 'waterlogging').length;
+  const waterShortageCount = outcomes.filter(o => o.hazard_type === 'water_shortage').length;
+
   const realCount = outcomes.filter(o => o.provenance === 'REAL').length;
   const simCount = outcomes.filter(o => o.provenance === 'SIMULATED').length;
+
+  // Multi-Hazard filtering
+  const filteredOutcomes = outcomes.filter(o => {
+    if (selectedDomain !== 'ALL' && o.hazard_type !== selectedDomain) return false;
+    if (selectedWard !== 'ALL' && o.ward_id !== selectedWard && o.ward_name !== selectedWard) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchId = (o.outcome_id || '').toLowerCase().includes(q);
+      const matchWard = (o.ward_id || '').toLowerCase().includes(q) || (o.ward_name || '').toLowerCase().includes(q);
+      const matchSource = (o.data_source || '').toLowerCase().includes(q);
+      const matchNotes = (o.verification_notes || '').toLowerCase().includes(q);
+      if (!matchId && !matchWard && !matchSource && !matchNotes) return false;
+    }
+    return true;
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -97,12 +120,100 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
         </div>
       </div>
 
+      {/* Multi-Hazard Domain Filters & Search Toolbar */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        flexWrap: 'wrap', 
+        gap: '12px',
+        marginBottom: '16px',
+        background: 'rgba(15, 23, 42, 0.4)',
+        padding: '10px 14px',
+        borderRadius: '8px',
+        border: '1px solid var(--border-subtle)'
+      }}>
+        {/* Domain Tabs */}
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ fontSize: '0.74rem', color: '#94a3b8', marginRight: '4px', fontWeight: 600, textTransform: 'uppercase' }}>
+            Domain:
+          </span>
+          <button
+            onClick={() => setSelectedDomain('ALL')}
+            className={`btn ${selectedDomain === 'ALL' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ padding: '4px 10px', fontSize: '0.76rem' }}
+          >
+            All Domains ({outcomes.length})
+          </button>
+          <button
+            onClick={() => setSelectedDomain('heat')}
+            className={`btn ${selectedDomain === 'heat' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ 
+              padding: '4px 10px', 
+              fontSize: '0.76rem',
+              borderColor: selectedDomain === 'heat' ? '#f43f5e' : undefined,
+              color: selectedDomain === 'heat' ? '#fff' : '#fda4af'
+            }}
+          >
+            ☀️ Extreme Heat ({heatCount})
+          </button>
+          <button
+            onClick={() => setSelectedDomain('waterlogging')}
+            className={`btn ${selectedDomain === 'waterlogging' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ 
+              padding: '4px 10px', 
+              fontSize: '0.76rem',
+              borderColor: selectedDomain === 'waterlogging' ? '#06b6d4' : undefined,
+              color: selectedDomain === 'waterlogging' ? '#fff' : '#67e8f9'
+            }}
+          >
+            🌊 Waterlogging ({waterloggingCount})
+          </button>
+          <button
+            onClick={() => setSelectedDomain('water_shortage')}
+            className={`btn ${selectedDomain === 'water_shortage' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ 
+              padding: '4px 10px', 
+              fontSize: '0.76rem',
+              borderColor: selectedDomain === 'water_shortage' ? '#0284c7' : undefined,
+              color: selectedDomain === 'water_shortage' ? '#fff' : '#7dd3fc'
+            }}
+          >
+            💧 Water Shortage ({waterShortageCount})
+          </button>
+        </div>
+
+        {/* Ward & Search Controls */}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <select
+            value={selectedWard}
+            onChange={(e) => setSelectedWard(e.target.value)}
+            className="input-field"
+            style={{ padding: '4px 8px', fontSize: '0.76rem', width: 'auto', minWidth: '110px' }}
+          >
+            <option value="ALL">All Wards</option>
+            {Array.from(new Set(outcomes.map(o => o.ward_id))).sort().map(w => (
+              <option key={w} value={w}>{w}</option>
+            ))}
+          </select>
+
+          <input
+            type="text"
+            placeholder="Search records / ID / notes..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="input-field"
+            style={{ padding: '4px 10px', fontSize: '0.76rem', width: '180px' }}
+          />
+        </div>
+      </div>
+
       {/* Privacy Guarantee & Provenance Stats Bar */}
       <div style={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
-        alignItems: 'center',
-        flexWrap: 'wrap',
+        alignItems: 'center', 
+        flexWrap: 'wrap', 
         gap: '12px',
         background: 'rgba(15, 23, 42, 0.6)', 
         padding: '12px 16px', 
@@ -126,7 +237,7 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
 
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center', fontSize: '0.78rem' }}>
           <span style={{ color: '#cbd5e1' }}>
-            Total Observations: <strong>{outcomes.length}</strong>
+            Showing: <strong>{filteredOutcomes.length}</strong> of {outcomes.length}
           </span>
           <span className="badge badge-real">
             {realCount} Empirical Real
@@ -140,19 +251,19 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
       </div>
 
       {/* Table / Empty State */}
-      {outcomes.length === 0 ? (
+      {filteredOutcomes.length === 0 ? (
         <div className="empty-state" style={{ minHeight: '200px' }}>
           <Database className="empty-state-icon" />
-          <h4 style={{ fontSize: '1rem', color: '#f8fafc', marginBottom: '6px' }}>No Verified Outcomes Recorded</h4>
+          <h4 style={{ fontSize: '1rem', color: '#f8fafc', marginBottom: '6px' }}>No Verified Outcomes Matching Filter</h4>
           <p style={{ maxWidth: '440px', fontSize: '0.82rem', color: '#94a3b8', marginBottom: '16px' }}>
-            Ground-truth hospital admissions, 108 emergency calls, and water complaint logs have not been ingested yet.
+            No records matched the selected domain ({selectedDomain}) or ward criteria.
           </p>
           <button 
-            onClick={() => setShowAddModal(true)} 
-            className="btn btn-primary"
+            onClick={() => { setSelectedDomain('ALL'); setSelectedWard('ALL'); setSearchQuery(''); }} 
+            className="btn btn-secondary"
             style={{ fontSize: '0.8rem' }}
           >
-            <PlusCircle size={14} /> Submit First Municipal Observation
+            Reset Filters
           </button>
         </div>
       ) : (
@@ -171,7 +282,7 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
               </tr>
             </thead>
             <tbody>
-              {outcomes.map(o => (
+              {filteredOutcomes.map(o => (
                 <tr key={o.outcome_id}>
                   <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: '#38bdf8' }}>
                     {o.outcome_id}
@@ -186,8 +297,33 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
                     </span>
                   </td>
                   <td>
-                    <span style={{ textTransform: 'capitalize', color: '#94a3b8' }}>
-                      {o.hazard_type}
+                    <span style={{
+                      padding: '3px 8px',
+                      borderRadius: '6px',
+                      fontSize: '0.74rem',
+                      fontWeight: 600,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      background: o.hazard_type === 'waterlogging' 
+                        ? 'rgba(6, 182, 212, 0.15)' 
+                        : o.hazard_type === 'water_shortage' 
+                        ? 'rgba(56, 189, 248, 0.15)' 
+                        : 'rgba(244, 63, 94, 0.15)',
+                      color: o.hazard_type === 'waterlogging'
+                        ? '#22d3ee'
+                        : o.hazard_type === 'water_shortage'
+                        ? '#38bdf8'
+                        : '#fb7185',
+                      border: `1px solid ${
+                        o.hazard_type === 'waterlogging'
+                          ? 'rgba(6, 182, 212, 0.3)'
+                          : o.hazard_type === 'water_shortage'
+                          ? 'rgba(56, 189, 248, 0.3)'
+                          : 'rgba(244, 63, 94, 0.3)'
+                      }`
+                    }}>
+                      {o.hazard_type === 'waterlogging' ? '🌊 Waterlogging' : o.hazard_type === 'water_shortage' ? '💧 Water Shortage' : '☀️ Heat'}
                     </span>
                   </td>
                   <td>
