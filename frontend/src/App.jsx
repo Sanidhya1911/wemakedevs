@@ -95,7 +95,7 @@ export default function App() {
           )}
 
           {activeTab === 'learning-loop' && (
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-7xl mx-auto py-2">
               <LearningLoopDashboard />
             </div>
           )}
