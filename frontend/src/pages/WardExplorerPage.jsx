@@ -75,12 +75,38 @@ export default function WardExplorerPage({ onInspectWard, selectedZone = 'All 7 
         </div>
 
         <div className="flex items-center gap-2">
+          <select
+            value={activeWard.id || ''}
+            onChange={(e) => {
+              const found = wardsList.find((w) => w.id === e.target.value);
+              if (found) setSelectedWard(found);
+            }}
+            className="h-9 px-2.5 text-xs bg-white border border-outline-variant rounded-lg focus:outline-none focus:border-primary cursor-pointer max-w-[190px]"
+            title="Select Ward Directly"
+          >
+            {wardsList.map((w, idx) => (
+              <option key={`${w.id || 'ward'}-${w.official_name || w.name || idx}-${idx}`} value={w.id}>
+                {w.name} ({w.id})
+              </option>
+            ))}
+          </select>
           <input
             type="text"
-            placeholder="Search all 48 wards..."
+            placeholder="Filter wards..."
             value={searchFilter}
-            onChange={(e) => setSearchFilter(e.target.value)}
-            className="h-9 px-3 text-xs bg-white border border-outline-variant rounded-lg w-56 focus:outline-none focus:border-primary"
+            onChange={(e) => {
+              const val = e.target.value;
+              setSearchFilter(val);
+              if (val) {
+                const match = wardsList.find(
+                  (w) =>
+                    (w.name && w.name.toLowerCase().includes(val.toLowerCase())) ||
+                    (w.id && w.id.toLowerCase().includes(val.toLowerCase()))
+                );
+                if (match) setSelectedWard(match);
+              }
+            }}
+            className="h-9 px-3 text-xs bg-white border border-outline-variant rounded-lg w-40 focus:outline-none focus:border-primary"
           />
         </div>
       </div>
@@ -104,13 +130,16 @@ export default function WardExplorerPage({ onInspectWard, selectedZone = 'All 7 
         <div className="xl:col-span-8">
           <AhmedabadVectorMap 
             liveWards={wardsList}
+            selectedWardId={selectedWard?.id || selectedWard?.official_name || selectedWard?.name}
             onInspectWard={onInspectWard}
             onSelectWard={(w) => {
               const found = wardsList.find(x => 
-                (x.name && x.name.toLowerCase() === w.name.toLowerCase()) ||
+                (x.name && x.name.toLowerCase() === w.name?.toLowerCase()) ||
+                (x.official_name && w.official_name && x.official_name.toUpperCase() === w.official_name.toUpperCase()) ||
                 (x.id && x.id.toLowerCase() === w.id?.toLowerCase())
               );
               if (found) setSelectedWard(found);
+              else setSelectedWard(w);
             }}
           />
         </div>
