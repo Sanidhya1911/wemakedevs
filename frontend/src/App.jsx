@@ -95,11 +95,9 @@ export default function App() {
           )}
 
           {activeTab === 'learning-loop' && (
-            <div className="learning-loop-container p-4">
-              <LearningLoopDashboard 
-                key={`learning-loop-${refreshTrigger}`}
-              />
-            </div>
+            <LearningLoopDashboard 
+              key={`learning-loop-${refreshTrigger}`}
+            />
           )}
 
           {activeTab === 'ward-explorer' && (

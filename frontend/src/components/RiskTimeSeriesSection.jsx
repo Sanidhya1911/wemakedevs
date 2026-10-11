@@ -1,17 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { 
   TrendingUp, 
-  Calendar, 
   MapPin, 
-  Flame, 
-  Droplet, 
   Layers, 
   Info, 
   AlertCircle,
-  Database,
-  ArrowRight
+  Database
 } from 'lucide-react';
-import ProvenanceBadge from './ProvenanceBadge';
 
 export default function RiskTimeSeriesSection({ predictions = [], outcomes = [], wards = [] }) {
   const [selectedWard, setSelectedWard] = useState('ALL');
@@ -64,7 +59,6 @@ export default function RiskTimeSeriesSection({ predictions = [], outcomes = [],
     });
   }, [filteredOutcomes]);
 
-  // Check if we have verified real outcomes
   const hasRealOutcomes = outcomeRiskPoints.some(o => o.provenance === 'REAL');
   const hasAnyOutcomes = outcomeRiskPoints.length > 0;
   const hasPredictions = filteredPredictions.length > 0;
@@ -82,174 +76,130 @@ export default function RiskTimeSeriesSection({ predictions = [], outcomes = [],
   }, [filteredPredictions, outcomeRiskPoints]);
 
   return (
-    <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px' }}>
+    <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-xs mb-6">
       {/* Header and Controls */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ background: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4', padding: '8px', borderRadius: '8px' }}>
-              <TrendingUp size={20} />
-            </div>
-            <div>
-              <h3 style={{ fontSize: '1.15rem', color: '#f8fafc', fontWeight: 600 }}>Predicted vs. Observed Risk Timeline</h3>
-              <p style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
-                Relational calibration connecting model forecasts with empirical ground-truth hospital morbidity and civic outcomes
-              </p>
-            </div>
+      <div className="flex justify-between items-start flex-wrap gap-4 mb-5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-800 border border-sky-200 flex items-center justify-center font-bold">
+            <TrendingUp size={20} />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-primary">Predicted vs. Observed Risk Timeline</h3>
+            <p className="text-xs text-on-surface-variant">
+              Relational calibration connecting model forecasts with empirical ground-truth hospital morbidity and civic outcomes
+            </p>
           </div>
         </div>
 
         {/* Filters */}
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(15, 23, 42, 0.8)', padding: '4px 10px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
-            <MapPin size={14} color="#94a3b8" />
+        <div className="flex gap-2.5 items-center flex-wrap">
+          <div className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs">
+            <MapPin size={14} className="text-outline" />
             <select 
               value={selectedWard} 
               onChange={e => setSelectedWard(e.target.value)}
-              className="form-select"
-              style={{ padding: '4px 8px', fontSize: '0.8rem', background: 'transparent', border: 'none', color: '#f8fafc' }}
+              className="bg-transparent border-none text-xs text-on-surface font-semibold focus:outline-none cursor-pointer"
             >
-              <option value="ALL" style={{ background: '#0f172a' }}>All Ahmedabad Wards</option>
+              <option value="ALL">All Ahmedabad Wards</option>
               {wards.map(w => (
-                <option key={w.id || w.name} value={w.id || w.name} style={{ background: '#0f172a' }}>
+                <option key={w.id || w.name} value={w.id || w.name}>
                   {w.name} ({w.id})
                 </option>
               ))}
             </select>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(15, 23, 42, 0.8)', padding: '4px 10px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
-            <Layers size={14} color="#94a3b8" />
+          <div className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs">
+            <Layers size={14} className="text-outline" />
             <select 
               value={selectedHazard} 
               onChange={e => setSelectedHazard(e.target.value)}
-              className="form-select"
-              style={{ padding: '4px 8px', fontSize: '0.8rem', background: 'transparent', border: 'none', color: '#f8fafc' }}
+              className="bg-transparent border-none text-xs text-on-surface font-semibold focus:outline-none cursor-pointer"
             >
-              <option value="ALL" style={{ background: '#0f172a' }}>All Hazards</option>
-              <option value="heat" style={{ background: '#0f172a' }}>Heatwaves</option>
-              <option value="waterlogging" style={{ background: '#0f172a' }}>Waterlogging / Pluvial Flood</option>
-              <option value="water_shortage" style={{ background: '#0f172a' }}>Potable Water Deficit</option>
-              <option value="compound" style={{ background: '#0f172a' }}>Compound Multi-Hazard</option>
+              <option value="ALL">All Hazards</option>
+              <option value="heat">Heatwaves</option>
+              <option value="waterlogging">Waterlogging / Pluvial Flood</option>
+              <option value="water_shortage">Potable Water Deficit</option>
+              <option value="compound">Compound Multi-Hazard</option>
             </select>
           </div>
         </div>
       </div>
 
       {/* Epistemic Status Banner */}
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '12px',
-        padding: '10px 16px', 
-        background: 'rgba(15, 23, 42, 0.6)', 
-        borderRadius: '8px', 
-        border: '1px solid var(--border-subtle)',
-        marginBottom: '20px',
-        fontSize: '0.8rem'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Info size={16} color="#38bdf8" />
-          <span style={{ color: '#cbd5e1' }}>
+      <div className="flex items-center justify-between flex-wrap gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200 mb-5 text-xs">
+        <div className="flex items-center gap-2 text-on-surface-variant">
+          <Info size={16} className="text-primary" />
+          <span>
             Data Filter: <strong>{filteredPredictions.length}</strong> Predictions recorded | <strong>{filteredOutcomes.length}</strong> Observed outcomes ({outcomeRiskPoints.filter(o => o.provenance === 'REAL').length} Verified Real)
           </span>
         </div>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#f59e0b', display: 'inline-block' }}></span>
-            <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Predicted Risk (Forecast)</span>
+        <div className="flex gap-3 items-center text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-xs bg-amber-500 inline-block"></span>
+            <span className="text-outline text-[11px]">Predicted Risk (Forecast)</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#10b981', display: 'inline-block' }}></span>
-            <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Observed Ground Truth (Real)</span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-xs bg-emerald-600 inline-block"></span>
+            <span className="text-outline text-[11px]">Observed Ground Truth (Real)</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ width: '10px', height: '10px', borderRadius: '2px', background: '#8b5cf6', display: 'inline-block' }}></span>
-            <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>Observed (Simulated Drill)</span>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-xs bg-purple-500 inline-block"></span>
+            <span className="text-outline text-[11px]">Observed (Simulated Drill)</span>
           </div>
         </div>
       </div>
 
       {/* Main Chart Area or Informative Empty State */}
       {!hasPredictions && !hasAnyOutcomes ? (
-        <div className="empty-state" style={{ minHeight: '260px' }}>
-          <Database className="empty-state-icon" />
-          <h4 style={{ fontSize: '1rem', color: '#f8fafc', marginBottom: '6px' }}>No Data Available for Selection</h4>
-          <p style={{ maxWidth: '420px', fontSize: '0.82rem', color: '#94a3b8', marginBottom: '16px' }}>
+        <div className="min-h-[220px] flex flex-col items-center justify-center p-8 bg-slate-50 border border-slate-200 rounded-xl text-center">
+          <Database className="w-10 h-10 text-slate-400 mb-2" />
+          <h4 className="text-sm font-bold text-on-surface mb-1">No Data Available for Selection</h4>
+          <p className="max-w-md text-xs text-on-surface-variant mb-3">
             No prediction records or observed municipal outcomes match the current ward or hazard filter.
           </p>
-          <span className="badge badge-unverified">Awaiting municipal telemetry ingestion</span>
+          <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+            Awaiting municipal telemetry ingestion
+          </span>
         </div>
       ) : !hasAnyOutcomes ? (
         /* Empty State: Predictions exist but NO verified outcomes recorded yet */
-        <div style={{
-          background: 'rgba(30, 41, 59, 0.4)',
-          borderRadius: '10px',
-          border: '1px dashed rgba(245, 158, 11, 0.4)',
-          padding: '32px 20px',
-          textAlign: 'center',
-          marginBottom: '20px'
-        }}>
-          <AlertCircle size={36} color="#f59e0b" style={{ margin: '0 auto 12px auto' }} />
-          <h4 style={{ color: '#f8fafc', fontSize: '1.05rem', marginBottom: '6px' }}>
+        <div className="bg-amber-50/50 rounded-xl border border-dashed border-amber-300 p-8 text-center mb-5">
+          <AlertCircle size={32} className="text-amber-600 mx-auto mb-2" />
+          <h4 className="text-sm font-bold text-amber-900 mb-1">
             Awaiting Ground-Truth Outcome Verification
           </h4>
-          <p style={{ maxWidth: '560px', margin: '0 auto 14px auto', fontSize: '0.84rem', color: '#cbd5e1' }}>
+          <p className="max-w-xl mx-auto mb-3 text-xs text-amber-800">
             There are <strong>{filteredPredictions.length}</strong> active risk forecasts for this selection, but <strong>no verified municipal outcomes have been recorded yet</strong>.
           </p>
-          <div style={{ 
-            display: 'inline-flex', 
-            background: 'rgba(15, 23, 42, 0.8)', 
-            padding: '8px 16px', 
-            borderRadius: '8px', 
-            border: '1px solid var(--border-subtle)',
-            fontSize: '0.78rem',
-            color: '#94a3b8',
-            textAlign: 'left',
-            gap: '12px'
-          }}>
+          <div className="inline-flex bg-white px-4 py-2 rounded-lg border border-amber-200 text-xs text-slate-700 text-left gap-3">
             <div><strong>Required Surveillance Data:</strong></div>
             <div>• Heat: AMC Hospital Inpatient Admissions &amp; 108 Dispatches</div>
             <div>• Water: Civic CCRS 155303 Complaints &amp; Flood Surcharge Depth</div>
           </div>
-          <p style={{ marginTop: '12px', fontSize: '0.75rem', color: '#64748b', fontStyle: 'italic' }}>
-            Per ClimateShield safety protocol: Model calibration curves are never fabricated or simulated as real observations without actual measurement data.
-          </p>
         </div>
       ) : (
         /* Render SVG Time-Series Chart */
-        <div style={{ marginBottom: '24px' }}>
-          <div style={{ 
-            width: '100%', 
-            height: '240px', 
-            background: 'rgba(15, 23, 42, 0.7)', 
-            borderRadius: '10px', 
-            border: '1px solid var(--border-subtle)', 
-            padding: '16px 20px',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-            {/* SVG Plot */}
-            <svg viewBox="0 0 800 200" preserveAspectRatio="none" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
+        <div className="mb-6">
+          <div className="w-full h-60 bg-white rounded-xl border border-slate-200 p-4 relative overflow-hidden">
+            <svg viewBox="0 0 800 200" preserveAspectRatio="none" className="w-full h-full overflow-visible">
               {/* Grid Lines */}
-              <line x1="50" y1="20" x2="780" y2="20" stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" />
-              <line x1="50" y1="60" x2="780" y2="60" stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" />
-              <line x1="50" y1="100" x2="780" y2="100" stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" />
-              <line x1="50" y1="140" x2="780" y2="140" stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" />
-              <line x1="50" y1="180" x2="780" y2="180" stroke="rgba(255,255,255,0.15)" />
+              <line x1="50" y1="20" x2="780" y2="20" stroke="#f1f5f9" strokeDasharray="3 3" />
+              <line x1="50" y1="60" x2="780" y2="60" stroke="#f1f5f9" strokeDasharray="3 3" />
+              <line x1="50" y1="100" x2="780" y2="100" stroke="#f1f5f9" strokeDasharray="3 3" />
+              <line x1="50" y1="140" x2="780" y2="140" stroke="#f1f5f9" strokeDasharray="3 3" />
+              <line x1="50" y1="180" x2="780" y2="180" stroke="#e2e8f0" />
 
               {/* Y-Axis Labels */}
-              <text x="40" y="24" fill="#64748b" fontSize="10" textAnchor="end">100</text>
-              <text x="40" y="64" fill="#64748b" fontSize="10" textAnchor="end">75</text>
-              <text x="40" y="104" fill="#64748b" fontSize="10" textAnchor="end">50</text>
-              <text x="40" y="144" fill="#64748b" fontSize="10" textAnchor="end">25</text>
-              <text x="40" y="184" fill="#64748b" fontSize="10" textAnchor="end">0</text>
+              <text x="40" y="24" fill="#94a3b8" fontSize="10" textAnchor="end">100</text>
+              <text x="40" y="64" fill="#94a3b8" fontSize="10" textAnchor="end">75</text>
+              <text x="40" y="104" fill="#94a3b8" fontSize="10" textAnchor="end">50</text>
+              <text x="40" y="144" fill="#94a3b8" fontSize="10" textAnchor="end">25</text>
+              <text x="40" y="184" fill="#94a3b8" fontSize="10" textAnchor="end">0</text>
 
               {/* Threshold 50 line (Severe / Alert threshold) */}
-              <line x1="50" y1="100" x2="780" y2="100" stroke="rgba(245, 158, 11, 0.25)" strokeDasharray="4 4" strokeWidth="1.5" />
-              <text x="775" y="96" fill="#f59e0b" fontSize="9" textAnchor="end">Alert Threshold (50)</text>
+              <line x1="50" y1="100" x2="780" y2="100" stroke="#f59e0b" strokeDasharray="4 4" strokeWidth="1.5" strokeOpacity="0.6" />
+              <text x="775" y="96" fill="#d97706" fontSize="9" textAnchor="end" fontWeight="600">Alert Threshold (50)</text>
 
               {/* Prediction Points & Path */}
               {timelineDates.length > 0 && (
@@ -272,7 +222,7 @@ export default function RiskTimeSeriesSection({ predictions = [], outcomes = [],
                   {/* Lines for observed outcomes */}
                   <polyline
                     fill="none"
-                    stroke={hasRealOutcomes ? "#10b981" : "#8b5cf6"}
+                    stroke={hasRealOutcomes ? "#059669" : "#7c3aed"}
                     strokeWidth="2.5"
                     points={timelineDates.map((date, idx) => {
                       const matchOut = outcomeRiskPoints.find(o => o.dateStr === date);
@@ -291,7 +241,7 @@ export default function RiskTimeSeriesSection({ predictions = [], outcomes = [],
                     const y = 180 - (matchPred.predicted_risk_score / 100) * 160;
                     return (
                       <g key={`p-${idx}`}>
-                        <circle cx={x} cy={y} r="5" fill="#f59e0b" stroke="#0f172a" strokeWidth="2" />
+                        <circle cx={x} cy={y} r="5" fill="#f59e0b" stroke="#ffffff" strokeWidth="2" />
                       </g>
                     );
                   })}
@@ -302,10 +252,10 @@ export default function RiskTimeSeriesSection({ predictions = [], outcomes = [],
                     if (!matchOut) return null;
                     const x = 60 + (idx / Math.max(1, timelineDates.length - 1)) * 710;
                     const y = 180 - (matchOut.computedRiskScore / 100) * 160;
-                    const color = matchOut.provenance === 'REAL' ? '#10b981' : '#8b5cf6';
+                    const color = matchOut.provenance === 'REAL' ? '#059669' : '#7c3aed';
                     return (
                       <g key={`o-${idx}`}>
-                        <circle cx={x} cy={y} r="6" fill={color} stroke="#0f172a" strokeWidth="2" />
+                        <circle cx={x} cy={y} r="6" fill={color} stroke="#ffffff" strokeWidth="2" />
                       </g>
                     );
                   })}
@@ -327,26 +277,25 @@ export default function RiskTimeSeriesSection({ predictions = [], outcomes = [],
         </div>
       )}
 
-      {/* Contemporaneous Observation Comparison Table */}
+      {/* Contemporaneous Observation Comparison Table (Without Data Source & Provenance Column) */}
       {timelineDates.length > 0 && (
-        <div style={{ overflowX: 'auto' }}>
-          <h4 style={{ fontSize: '0.88rem', color: '#cbd5e1', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>Observation Comparison Log</span>
-            <span style={{ fontSize: '0.75rem', color: '#64748b' }}>({timelineDates.length} chronological timestamps)</span>
-          </h4>
-          <table className="data-table">
+        <div className="overflow-x-auto rounded-xl border border-outline-variant bg-surface-container-lowest">
+          <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+            <span className="text-xs font-bold text-primary">Observation Comparison Log</span>
+            <span className="text-[11px] font-mono text-outline">({timelineDates.length} chronological timestamps)</span>
+          </div>
+          <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr>
-                <th>Date</th>
-                <th>Ward</th>
-                <th>Hazard</th>
-                <th>Predicted Risk</th>
-                <th>Observed Outcome Proxy</th>
-                <th>Model Residual (Error)</th>
-                <th>Data Source &amp; Provenance</th>
+              <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-mono text-outline uppercase tracking-wider">
+                <th className="py-2.5 px-3.5 font-semibold text-slate-700">Date</th>
+                <th className="py-2.5 px-3.5 font-semibold text-slate-700">Ward</th>
+                <th className="py-2.5 px-3.5 font-semibold text-slate-700">Hazard</th>
+                <th className="py-2.5 px-3.5 font-semibold text-slate-700">Predicted Risk</th>
+                <th className="py-2.5 px-3.5 font-semibold text-slate-700">Observed Outcome Proxy</th>
+                <th className="py-2.5 px-3.5 font-semibold text-slate-700">Model Residual (Error)</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100">
               {timelineDates.map(date => {
                 const pred = filteredPredictions.find(p => (p.timestamp || '').slice(0, 10) === date);
                 const out = outcomeRiskPoints.find(o => o.dateStr === date);
@@ -358,64 +307,52 @@ export default function RiskTimeSeriesSection({ predictions = [], outcomes = [],
                   : null;
 
                 return (
-                  <tr key={date}>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#94a3b8' }}>{date}</td>
-                    <td>
-                      <span style={{ fontWeight: 500 }}>{pred?.ward_name || out?.ward_name || pred?.ward_id || out?.ward_id || 'All Wards'}</span>
+                  <tr key={date} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3 px-3.5 font-mono text-xs text-outline">{date}</td>
+                    <td className="py-3 px-3.5 font-semibold text-on-surface">
+                      {pred?.ward_name || out?.ward_name || pred?.ward_id || out?.ward_id || 'All Wards'}
                     </td>
-                    <td>
-                      <span style={{ textTransform: 'capitalize', color: '#cbd5e1' }}>
-                        {pred?.hazard_type || out?.hazard_type || 'General'}
-                      </span>
+                    <td className="py-3 px-3.5 capitalize text-on-surface-variant">
+                      {pred?.hazard_type || out?.hazard_type || 'General'}
                     </td>
-                    <td>
+                    <td className="py-3 px-3.5">
                       {predScore !== null ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ 
-                            fontWeight: 600, 
-                            color: predScore >= 70 ? '#f43f5e' : (predScore >= 50 ? '#f59e0b' : '#38bdf8') 
-                          }}>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`font-bold font-mono ${
+                            predScore >= 70 ? 'text-rose-700' : (predScore >= 50 ? 'text-amber-700' : 'text-sky-700')
+                          }`}>
                             {predScore}
                           </span>
-                          <span style={{ fontSize: '0.7rem', color: '#64748b' }}>({pred?.risk_category})</span>
+                          <span className="text-[10px] text-outline font-semibold">({pred?.risk_category})</span>
                         </div>
                       ) : (
-                        <span style={{ color: '#475569' }}>— No Forecast —</span>
+                        <span className="text-slate-400">— No Forecast —</span>
                       )}
                     </td>
-                    <td>
+                    <td className="py-3 px-3.5">
                       {outScore !== null ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontWeight: 600, color: '#10b981' }}>{outScore}</span>
-                          <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold font-mono text-emerald-800">{outScore}</span>
+                          <span className="text-[11px] text-outline">
                             ({out.hospital_heat_admissions} adm / {out.emergency_108_calls} calls / {out.water_scarcity_complaints} comp)
                           </span>
                         </div>
                       ) : (
-                        <span style={{ color: '#475569' }}>— Pending Outcome —</span>
+                        <span className="text-slate-400">— Pending Outcome —</span>
                       )}
                     </td>
-                    <td>
+                    <td className="py-3 px-3.5">
                       {residual !== null ? (
-                        <span style={{ 
-                          fontWeight: 600, 
-                          color: Math.abs(residual) <= 8 ? '#10b981' : (residual > 0 ? '#f43f5e' : '#38bdf8'),
-                          fontFamily: 'var(--font-mono)',
-                          fontSize: '0.8rem'
-                        }}>
+                        <span className={`font-bold font-mono px-2 py-0.5 rounded text-[11px] ${
+                          Math.abs(residual) <= 8 
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
+                            : (residual > 0 ? 'bg-rose-50 text-rose-800 border border-rose-200' : 'bg-sky-50 text-sky-800 border border-sky-200')
+                        }`}>
                           {residual > 0 ? `+${residual}` : residual} pts
                         </span>
                       ) : (
-                        <span style={{ color: '#475569' }}>—</span>
+                        <span className="text-slate-400">—</span>
                       )}
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>
-                          {out?.data_source || pred?.data_source || 'Telemetry'}
-                        </span>
-                        <ProvenanceBadge provenance={out?.provenance || pred?.provenance || 'ESTIMATED'} />
-                      </div>
                     </td>
                   </tr>
                 );

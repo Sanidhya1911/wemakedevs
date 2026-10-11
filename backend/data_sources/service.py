@@ -17,11 +17,8 @@ from backend.data_sources.era5_land import ERA5LandClient
 from backend.data_sources.ecostress import ECOSTRESSClient
 from backend.data_sources.fusion import DataFusionEngine
 
-# Import existing engines without modifying them
+# Import existing engines
 from backend.wbgt_pipeline import calculate_outdoor_wbgt, classify_wbgt_risk
-from backend.water_engine import assess_citywide_water_risk
-from backend.combined_risk_engine import evaluate_combined_climate_risk
-from backend.optimizer import optimize_from_combined_climate_results
 
 logger = logging.getLogger("climateshield.data_sources.service")
 
@@ -164,6 +161,7 @@ class DataSourcesService:
         peak_1h = ward_profiles[0].get("peak_hourly_rainfall_mm", 0.0) if ward_profiles else 0.0
 
         # Run Combined Risk Engine with fused meteorological parameters
+        from backend.combined_risk_engine import evaluate_combined_climate_risk
         combined_results = await evaluate_combined_climate_risk(
             weight_heat=weight_heat,
             weight_water=weight_water,
@@ -206,6 +204,7 @@ class DataSourcesService:
             scoring_mode=scoring_mode
         )
 
+        from backend.optimizer import optimize_from_combined_climate_results
         plan = optimize_from_combined_climate_results(
             combined_climate_results=climate_eval,
             total_budget_inr=total_budget_inr,
