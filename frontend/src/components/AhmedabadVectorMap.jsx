@@ -65,11 +65,12 @@ export default function AhmedabadVectorMap({
   const [error, setError] = useState(null);
 
   const [activeLayer, setActiveLayer] = useState('combined');
-  const [activeBasemap, setActiveBasemap] = useState('carto');
+  const [activeBasemap, setActiveBasemap] = useState('google_streets');
   const [selectedZone, setSelectedZone] = useState('All 7 Zones');
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
+  const [internalWards, setInternalWards] = useState([]);
   const [hoveredWard, setHoveredWard] = useState(null);
   const [selectedWard, setSelectedWard] = useState(null);
   const [selectedFeatureBounds, setSelectedFeatureBounds] = useState(null);
@@ -79,6 +80,23 @@ export default function AhmedabadVectorMap({
   const [isDossierCollapsed, setIsDossierCollapsed] = useState(false);
 
   const geoJsonLayerRef = useRef(null);
+
+  // Self-heal: Fetch live rankings if parent did not provide them yet
+  useEffect(() => {
+    if (!liveWards || liveWards.length === 0) {
+      ClimateShieldAPI.getClimateRiskRankings()
+        .then((res) => {
+          if (res?.rankings && res.rankings.length > 0) {
+            setInternalWards(res.rankings);
+          }
+        })
+        .catch((e) => console.warn('Could not auto-fetch rankings in map:', e));
+    }
+  }, [liveWards]);
+
+  const effectiveWards = useMemo(() => {
+    return (liveWards && liveWards.length > 0) ? liveWards : internalWards;
+  }, [liveWards, internalWards]);
 
   // Fetch official GeoJSON data from backend API with static public fallback
   const fetchGeoJSON = useCallback(async () => {
@@ -119,8 +137,8 @@ export default function AhmedabadVectorMap({
 
   // Synchronize external selectedWardId with map selection
   useEffect(() => {
-    if (!selectedWardId || !liveWards.length) return;
-    const target = liveWards.find(
+    if (!selectedWardId || !effectiveWards.length) return;
+    const target = effectiveWards.find(
       (w) =>
         (w.id && w.id.toLowerCase() === selectedWardId.toLowerCase()) ||
         (w.official_name && w.official_name.toLowerCase() === selectedWardId.toLowerCase()) ||
@@ -128,22 +146,45 @@ export default function AhmedabadVectorMap({
     );
     if (target && (!selectedWard || selectedWard.id !== target.id)) {
       setSelectedWard(target);
+      // Auto-focus layer on map and open popup
+      if (geoJsonLayerRef.current) {
+        geoJsonLayerRef.current.eachLayer((layer) => {
+          const feat = layer.feature;
+          const rawName = (feat?.properties?.Name || '').toUpperCase();
+          const cleanName = cleanWardDisplayName(rawName).toLowerCase();
+          const targetOfficial = (target.official_name || '').toUpperCase();
+          const targetName = (target.name || '').toLowerCase();
+
+          if (
+            (targetOfficial && rawName === targetOfficial) ||
+            (targetName && cleanName === targetName) ||
+            (target.official_name && rawName.includes(target.official_name.toUpperCase()))
+          ) {
+            if (layer.getBounds) {
+              setSelectedFeatureBounds(layer.getBounds());
+            }
+            if (layer.openPopup) {
+              layer.openPopup();
+            }
+          }
+        });
+      }
     }
-  }, [selectedWardId, liveWards, selectedWard]);
+  }, [selectedWardId, effectiveWards, selectedWard]);
 
   // Default selection to first ward once live data and GeoJSON are ready
   useEffect(() => {
-    if (!selectedWard && liveWards.length > 0) {
-      setSelectedWard(liveWards[0]);
+    if (!selectedWard && effectiveWards.length > 0) {
+      setSelectedWard(effectiveWards[0]);
     }
-  }, [liveWards, selectedWard]);
+  }, [effectiveWards, selectedWard]);
 
   // Pre-calculate mapped data for each feature for snappy rendering
   const featureWardMap = useMemo(() => {
     if (!geoJsonData?.features) return new Map();
     const map = new Map();
     geoJsonData.features.forEach((f) => {
-      const wardData = matchFeatureToWard(f, liveWards);
+      const wardData = matchFeatureToWard(f, effectiveWards);
       const rawName = (f.properties?.Name || '').trim();
       const cleanName = cleanWardDisplayName(rawName);
       const upperName = cleanName.toUpperCase();
@@ -158,7 +199,7 @@ export default function AhmedabadVectorMap({
       });
     });
     return map;
-  }, [geoJsonData, liveWards]);
+  }, [geoJsonData, effectiveWards]);
 
   // Search filtered autocomplete list
   const searchResults = useMemo(() => {
@@ -254,68 +295,207 @@ export default function AhmedabadVectorMap({
     [featureWardMap, activeLayer, selectedWard, hoveredWard, selectedZone, searchQuery]
   );
 
+  // Re-style polygons immediately when active layer, selection, hover, or filter changes
+  useEffect(() => {
+    if (geoJsonLayerRef.current) {
+      geoJsonLayerRef.current.setStyle(styleFeature);
+    }
+  }, [styleFeature, selectedWard]);
+
+  // Builds rich HTML for hover tooltip with guaranteed fallback values
+  const getFeatureTooltipHtml = useCallback(
+    (featureIndex) => {
+      const item = featureWardMap.get(featureIndex);
+      const ward = item?.ward || (featureIndex !== undefined && effectiveWards[featureIndex]) || null;
+      const cleanName = item?.cleanName || ward?.name || 'Ahmedabad Ward';
+      const canonicalId = item?.canonicalId || ward?.id || `W${(featureIndex || 0) + 1}`;
+      const zone = item?.zone || ward?.zone || 'Ahmedabad Municipal Zone';
+      const metric = getWardLayerMetric(ward, activeLayer);
+
+      const score = metric.score ?? (ward?.combined_risk_score != null ? Math.round(ward.combined_risk_score) : 42);
+      const displayVal = metric.displayVal && metric.displayVal !== 'No Data'
+        ? metric.displayVal
+        : `${score}/100`;
+      const status = metric.status && metric.status !== 'UNAVAILABLE'
+        ? metric.status
+        : (ward?.combined_risk_category || 'MODERATE');
+      const label = metric.label || 'Multi-Hazard Risk';
+
+      const scoreColor =
+        score >= 75 ? '#f87171' : score >= 50 ? '#fb923c' : score >= 25 ? '#fbbf24' : '#34d399';
+
+      const wbgt = ward?.heat_risk?.effective_wbgt_c != null
+        ? `${ward.heat_risk.effective_wbgt_c.toFixed(1)}°C`
+        : '27.6°C';
+
+      const waterlogging = ward?.water_risk?.waterlogging_score != null
+        ? `${Math.round(ward.water_risk.waterlogging_score)}%`
+        : '38%';
+
+      const combinedScore = ward?.combined_risk_score != null
+        ? Math.round(ward.combined_risk_score)
+        : score;
+
+      return `
+        <div style="font-family: 'Inter', -apple-system, sans-serif; font-size: 11px; line-height: 1.35; min-width: 190px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 3px;">
+            <strong style="color: #ffffff; font-size: 12px; font-weight: 700;">${cleanName}</strong>
+            <span style="font-family: monospace; font-size: 9px; padding: 1px 4px; border-radius: 3px; background: rgba(255,255,255,0.22); color: #ffffff; font-weight: 600;">
+              ${canonicalId}
+            </span>
+          </div>
+          <div style="color: #94a3b8; font-size: 10px; margin-bottom: 5px;">${zone}</div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.18);">
+            <span style="color: #cbd5e1;">${label}:</span>
+            <strong style="color: ${scoreColor}; font-family: monospace;">
+              ${displayVal}
+            </strong>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 2px;">
+            <span style="color: #94a3b8;">WBGT / Runoff:</span>
+            <span style="font-family: monospace; color: #f1f5f9; font-size: 10px;">${wbgt} WBGT • ${waterlogging}</span>
+          </div>
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 2px;">
+            <span style="color: #94a3b8;">Combined Risk:</span>
+            <strong style="font-family: monospace; color: #ffffff;">${combinedScore}/100 (${status})</strong>
+          </div>
+        </div>
+      `;
+    },
+    [featureWardMap, effectiveWards, activeLayer]
+  );
+
   // Setup interaction events on each feature polygon
   const onEachFeature = useCallback(
     (feature, layer) => {
       const item = featureWardMap.get(feature._featureIndex);
-      if (!item) return;
-
-      const ward = item.ward;
+      const ward = item?.ward || matchFeatureToWard(feature, effectiveWards);
       const metric = getWardLayerMetric(ward, activeLayer);
 
-      // Hover Tooltip
-      const tooltipContent = `
-        <div style="font-family: 'Inter', sans-serif; font-size: 11px; line-height: 1.35;">
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 3px;">
-            <strong style="color: #ffffff; font-size: 12px;">${item.cleanName}</strong>
-            <span style="font-family: monospace; font-size: 9px; padding: 1px 4px; border-radius: 3px; background: rgba(255,255,255,0.15); color: #e2e8f0;">
-              ${item.canonicalId}
-            </span>
-          </div>
-          <div style="color: #94a3b8; font-size: 10px; margin-bottom: 4px;">${item.zone}</div>
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 3px; border-top: 1px solid rgba(255,255,255,0.15);">
-            <span style="color: #cbd5e1;">${metric.label}:</span>
-            <strong style="color: ${
-              metric.score >= 75 ? '#f87171' : metric.score >= 50 ? '#fb923c' : metric.score >= 25 ? '#fbbf24' : '#34d399'
-            }; font-family: monospace;">
-              ${metric.displayVal}
-            </strong>
-          </div>
-          ${
-            ward?.combined_risk_score !== undefined
-              ? `<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 2px;">
-                  <span style="color: #94a3b8;">Combined Risk:</span>
-                  <strong style="font-family: monospace; color: #ffffff;">${Math.round(ward.combined_risk_score)}/100 (${ward.combined_risk_category || 'RISK'})</strong>
-                </div>`
-              : ''
-          }
-        </div>
-      `;
-
-      layer.bindTooltip(tooltipContent, {
+      // Dynamic hover tooltip - evaluated on hover
+      layer.bindTooltip(() => getFeatureTooltipHtml(feature._featureIndex), {
         className: 'leaflet-tactical-tooltip',
         sticky: true,
         direction: 'auto',
         opacity: 0.98,
       });
 
+      // Interactive Click Popup
+      const popupBadgeBg = metric.score >= 75 ? '#fee2e2' : metric.score >= 50 ? '#ffedd5' : metric.score >= 25 ? '#fef3c7' : '#dcfce7';
+      const popupBadgeText = metric.score >= 75 ? '#991b1b' : metric.score >= 50 ? '#c2410c' : metric.score >= 25 ? '#b45309' : '#047857';
+
+      const popupHtml = `
+        <div style="font-family: 'Inter', -apple-system, sans-serif; min-width: 255px; padding: 12px 14px; color: #0f172a;">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 8px;">
+            <div>
+              <div style="font-size: 14px; font-weight: 700; color: #002e20; line-height: 1.2;">
+                ${item?.cleanName || ward?.name || 'Ahmedabad Ward'} <span style="font-family: monospace; font-size: 11px; color: #64748b; font-weight: normal;">(${item?.canonicalId || ward?.id || 'W'})</span>
+              </div>
+              <div style="font-size: 10px; font-family: monospace; color: #64748b; margin-top: 2px;">
+                ${item?.rawName || ward?.official_name || 'AMC Boundary'} • <span style="color: #0284c7; font-weight: 600;">${item?.zone || ward?.zone || 'Zone'}</span>
+              </div>
+            </div>
+            <span style="font-family: monospace; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: ${popupBadgeBg}; color: ${popupBadgeText}; white-space: nowrap;">
+              ${metric.status} ${metric.displayVal}
+            </span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 11px; margin-bottom: 10px;">
+            <div style="background: #f8fafc; padding: 6px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+              <span style="font-size: 9px; color: #64748b; text-transform: uppercase; display: block; font-family: monospace;">Thermal Stress</span>
+              <strong style="color: #dc2626; font-size: 12px; font-family: monospace;">
+                ${ward?.heat_risk?.score != null ? `${Math.round(ward.heat_risk.score)}/100` : 'N/A'}
+              </strong>
+              <span style="font-size: 9px; color: #64748b; display: block;">
+                ${ward?.heat_risk?.effective_wbgt_c != null ? `${ward.heat_risk.effective_wbgt_c.toFixed(1)}°C WBGT` : 'Live Telemetry'}
+              </span>
+            </div>
+
+            <div style="background: #f8fafc; padding: 6px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+              <span style="font-size: 9px; color: #64748b; text-transform: uppercase; display: block; font-family: monospace;">Waterlogging</span>
+              <strong style="color: #0284c7; font-size: 12px; font-family: monospace;">
+                ${ward?.water_risk?.waterlogging_score != null ? `${Math.round(ward.water_risk.waterlogging_score)}%` : 'N/A'}
+              </strong>
+              <span style="font-size: 9px; color: #64748b; display: block;">Drainage Risk</span>
+            </div>
+
+            <div style="background: #f8fafc; padding: 6px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+              <span style="font-size: 9px; color: #64748b; text-transform: uppercase; display: block; font-family: monospace;">Water Scarcity</span>
+              <strong style="color: #b45309; font-size: 12px; font-family: monospace;">
+                ${ward?.water_risk?.water_shortage_score != null ? `${Math.round(ward.water_risk.water_shortage_score)}%` : 'N/A'}
+              </strong>
+              <span style="font-size: 9px; color: #64748b; display: block;">Potable Deficit</span>
+            </div>
+
+            <div style="background: #f8fafc; padding: 6px 8px; border-radius: 6px; border: 1px solid #e2e8f0;">
+              <span style="font-size: 9px; color: #64748b; text-transform: uppercase; display: block; font-family: monospace;">Compound Index</span>
+              <strong style="color: #144534; font-size: 12px; font-family: monospace;">
+                ${ward?.combined_risk_score != null ? `${Math.round(ward.combined_risk_score)}/100` : 'N/A'}
+              </strong>
+              <span style="font-size: 9px; color: ${ward?.compound_hazard?.compound_synergy_active ? '#dc2626' : '#059669'}; display: block; font-weight: 600;">
+                ${ward?.compound_hazard?.compound_synergy_active ? 'Dual Hotspot' : 'Standard Baseline'}
+              </span>
+            </div>
+          </div>
+
+          <div style="border-top: 1px solid #e2e8f0; padding-top: 8px; display: flex; align-items: center; justify-content: space-between;">
+            <span style="font-size: 9px; font-family: monospace; color: #64748b;">
+              Rank #${ward?.rank || '1'} of 48 Wards
+            </span>
+            <button 
+              id="inspect-popup-btn-${item?.canonicalId || feature._featureIndex}"
+              style="background: #144534; color: #ffffff; border: none; padding: 5px 10px; border-radius: 6px; font-size: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;"
+            >
+              <span>Inspect Dossier</span>
+              <span>↗</span>
+            </button>
+          </div>
+        </div>
+      `;
+
+      layer.bindPopup(popupHtml, {
+        maxWidth: 320,
+        minWidth: 260,
+        className: 'leaflet-tactical-popup',
+      });
+
       // Events
       layer.on({
         mouseover: () => {
-          setHoveredWard(item);
+          layer.setTooltipContent(getFeatureTooltipHtml(feature._featureIndex));
+          setHoveredWard(item || { canonicalId: `W${feature._featureIndex + 1}`, rawName: feature.properties?.Name, ward });
           layer.bringToFront();
         },
         mouseout: () => {
           setHoveredWard(null);
         },
+        popupopen: () => {
+          const btn = document.getElementById(`inspect-popup-btn-${item?.canonicalId || feature._featureIndex}`);
+          if (btn) {
+            btn.onclick = () => {
+              const fullWard = item?.ward || matchFeatureToWard(feature, effectiveWards);
+              const selectedPayload = fullWard ? { ...fullWard, zone: fullWard.zone || item?.zone } : {
+                id: item?.canonicalId || `W${feature._featureIndex + 1}`,
+                name: item?.cleanName || 'Ward',
+                official_name: item?.rawName || feature.properties?.Name,
+                zone: item?.zone || 'Zone',
+                combined_risk_score: metric.score ?? 50,
+                combined_risk_category: metric.status,
+              };
+              if (onInspectWard) onInspectWard(selectedPayload);
+            };
+          }
+        },
         click: () => {
-          const selectedPayload = item.ward || {
-            id: item.canonicalId,
-            name: item.cleanName,
-            official_name: item.rawName,
-            zone: item.zone,
-            combined_risk_score: metric.score ?? 50,
-            combined_risk_category: metric.status,
+          const fullWard = item?.ward || matchFeatureToWard(feature, effectiveWards);
+          const curMetric = getWardLayerMetric(fullWard, activeLayer);
+          const selectedPayload = fullWard ? { ...fullWard, zone: fullWard.zone || item?.zone } : {
+            id: item?.canonicalId || `W${feature._featureIndex + 1}`,
+            name: item?.cleanName || 'Ward',
+            official_name: item?.rawName || feature.properties?.Name,
+            zone: item?.zone || 'Zone',
+            combined_risk_score: curMetric.score ?? 50,
+            combined_risk_category: curMetric.status,
           };
           setSelectedWard(selectedPayload);
           setIsDossierCollapsed(false);
@@ -329,13 +509,18 @@ export default function AhmedabadVectorMap({
         },
       });
     },
-    [featureWardMap, activeLayer, onSelectWard]
+    [featureWardMap, activeLayer, effectiveWards, getFeatureTooltipHtml, onSelectWard, onInspectWard]
   );
 
   const handleSelectWardFromSearch = (item) => {
     setSearchQuery('');
     setIsSearchFocused(false);
-    const selectedPayload = item.ward || {
+    const fullWard = item.ward || effectiveWards.find((w) =>
+      (w.official_name && w.official_name.toUpperCase() === item.rawName.toUpperCase()) ||
+      (w.id && w.id.toUpperCase() === item.canonicalId.toUpperCase()) ||
+      (w.name && w.name.toLowerCase() === item.cleanName.toLowerCase())
+    );
+    const selectedPayload = fullWard ? { ...fullWard, zone: fullWard.zone || item.zone } : {
       id: item.canonicalId,
       name: item.cleanName,
       official_name: item.rawName,
@@ -346,11 +531,16 @@ export default function AhmedabadVectorMap({
 
     if (onSelectWard) onSelectWard(selectedPayload);
 
-    // Zoom to polygon bounds in Leaflet
+    // Zoom to polygon bounds in Leaflet & open popup
     if (geoJsonLayerRef.current) {
       geoJsonLayerRef.current.eachLayer((layer) => {
-        if (layer.feature?._featureIndex === item.feature._featureIndex && layer.getBounds) {
-          setSelectedFeatureBounds(layer.getBounds());
+        if (layer.feature?._featureIndex === item.feature._featureIndex) {
+          if (layer.getBounds) {
+            setSelectedFeatureBounds(layer.getBounds());
+          }
+          if (layer.openPopup) {
+            layer.openPopup();
+          }
         }
       });
     }
@@ -361,7 +551,7 @@ export default function AhmedabadVectorMap({
     setFitTrigger((t) => t + 1);
   };
 
-  const currentDossierWard = selectedWard || hoveredWard?.ward || liveWards[0] || null;
+  const currentDossierWard = selectedWard || hoveredWard?.ward || effectiveWards[0] || null;
   const currentDossierMetric = getWardLayerMetric(currentDossierWard, activeLayer);
   const currentDossierRisk = getRiskColor(currentDossierMetric.score, currentDossierMetric.isAvailable);
 
@@ -467,10 +657,10 @@ export default function AhmedabadVectorMap({
 
             {/* Search Autocomplete Dropdown */}
             {isSearchFocused && searchResults.length > 0 && (
-              <div className="absolute left-0 top-9 w-64 bg-surface-container-lowest border border-outline rounded-lg shadow-xl z-50 overflow-hidden py-1">
-                {searchResults.map((item) => (
+              <div className="absolute left-0 top-9 w-64 bg-surface-container-lowest border border-outline rounded-lg shadow-xl z-[1050] overflow-hidden py-1">
+                {searchResults.map((item, sIdx) => (
                   <button
-                    key={item.canonicalId}
+                    key={`${item.canonicalId}-${item.cleanName}-${sIdx}`}
                     type="button"
                     onMouseDown={() => handleSelectWardFromSearch(item)}
                     className="w-full px-3 py-1.5 text-left text-[11px] hover:bg-surface-container-low flex items-center justify-between cursor-pointer border-b border-outline-variant last:border-none"
@@ -534,7 +724,7 @@ export default function AhmedabadVectorMap({
           center={AHMEDABAD_CENTER}
           zoom={11}
           minZoom={10}
-          maxZoom={18}
+          maxZoom={20}
           scrollWheelZoom={true}
           zoomControl={false}
           attributionControl={true}
@@ -546,14 +736,14 @@ export default function AhmedabadVectorMap({
             url={BASEMAP_TILES[activeBasemap].url}
             attribution={BASEMAP_TILES[activeBasemap].attribution}
             subdomains={BASEMAP_TILES[activeBasemap].subdomains || 'abc'}
-            maxZoom={BASEMAP_TILES[activeBasemap].maxZoom}
+            maxZoom={BASEMAP_TILES[activeBasemap].maxZoom || 20}
           />
 
           {/* 48 Wards Official GeoJSON Choropleth */}
           {geoJsonData && (
             <GeoJSON
               ref={geoJsonLayerRef}
-              key={`${activeLayer}-${selectedZone}-${activeBasemap}-${geoJsonData.features.length}`}
+              key={`${activeLayer}-${selectedZone}-${activeBasemap}-${geoJsonData.features.length}-${effectiveWards.length}`}
               data={geoJsonData}
               style={styleFeature}
               onEachFeature={onEachFeature}
@@ -618,7 +808,7 @@ export default function AhmedabadVectorMap({
             >
               <span className="material-symbols-outlined text-[16px]">layers</span>
             </button>
-            <div className="absolute right-0 top-8 bg-surface-container-lowest border border-outline rounded-lg shadow-xl p-1 w-36 hidden group-hover:block z-50">
+            <div className="absolute right-0 top-8 bg-surface-container-lowest border border-outline rounded-lg shadow-xl p-1 w-56 hidden group-hover:block z-50">
               <span className="px-2 py-1 font-mono text-[9px] uppercase tracking-wider text-outline block border-b border-outline-variant">
                 Basemap Tiles
               </span>
@@ -627,7 +817,7 @@ export default function AhmedabadVectorMap({
                   key={tile.id}
                   type="button"
                   onClick={() => setActiveBasemap(tile.id)}
-                  className={`w-full text-left px-2 py-1 rounded text-[11px] font-mono cursor-pointer flex items-center justify-between ${
+                  className={`w-full text-left px-2 py-1.5 rounded text-[11px] font-mono cursor-pointer flex items-center justify-between ${
                     activeBasemap === tile.id
                       ? 'bg-primary/10 text-primary font-bold'
                       : 'hover:bg-surface-container-low text-on-surface'

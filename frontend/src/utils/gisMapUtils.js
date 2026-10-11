@@ -74,12 +74,39 @@ export const AHMEDABAD_ZONES_LIST = [
   'South West Zone',
 ];
 
-// OpenStreetMap & Cartographic Basemaps (All Free, Reliable, No API Key Required)
+// Carto Basemaps Authenticated API Key
+export const CARTO_API_KEY = 'cb1_4gxl_1_927a06836d8a693fe5403957';
+
+// Real Google Maps & Authenticated Cartographic Basemaps
 export const BASEMAP_TILES = {
+  google_streets: {
+    id: 'google_streets',
+    name: 'Google Maps (Roadmap)',
+    url: 'https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
+    attribution: '&copy; Google Maps',
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    maxZoom: 20,
+  },
+  google_hybrid: {
+    id: 'google_hybrid',
+    name: 'Google Maps (Satellite Hybrid)',
+    url: 'https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
+    attribution: '&copy; Google Maps',
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    maxZoom: 20,
+  },
+  google_terrain: {
+    id: 'google_terrain',
+    name: 'Google Maps (Terrain)',
+    url: 'https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
+    attribution: '&copy; Google Maps',
+    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+    maxZoom: 20,
+  },
   carto: {
     id: 'carto',
     name: 'Municipal Carto',
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    url: `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${CARTO_API_KEY}`,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 19,
@@ -87,7 +114,7 @@ export const BASEMAP_TILES = {
   light: {
     id: 'light',
     name: 'Clean Light',
-    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    url: `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?api_key=${CARTO_API_KEY}`,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 19,
@@ -102,7 +129,7 @@ export const BASEMAP_TILES = {
   dark: {
     id: 'dark',
     name: 'Tactical Dark',
-    url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    url: `https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?api_key=${CARTO_API_KEY}`,
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 19,

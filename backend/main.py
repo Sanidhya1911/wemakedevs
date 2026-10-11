@@ -124,9 +124,6 @@ from backend.action_centre import (
     get_action_verification_report,
     dispatch_quick_action,
 )
-<<<<<<< HEAD
-from backend.database import DuplicateAssessmentError
-=======
 from backend.database import (
     DuplicateAssessmentError,
     list_action_audit_events,
@@ -136,7 +133,6 @@ from backend.database import (
     get_db_connection,
     get_ahmedabad_bulk_reservoir_summary,
 )
->>>>>>> c91b214e84f2d01ccc4a843f74a88b1a496eef61
 
 app = FastAPI(
     title="ClimateShield API - Ahmedabad Heat Decision Support",
@@ -224,14 +220,12 @@ def read_root():
             "/api/impact/wards/{ward_id}",
             "/api/impact/summary",
             "/api/impact/learning-signals",
-<<<<<<< HEAD
             "/api/bedrock/advisory",
             "/api/bedrock/status",
             "/api/aurora/status",
             "/api/aurora/schema",
             "/api/aurora/dataset",
-            "/api/aurora/sync"
-=======
+            "/api/aurora/sync",
             "/api/water/groundwater/stations",
             "/api/water/groundwater/observations",
             "/api/water/groundwater/trends",
@@ -241,7 +235,6 @@ def read_root():
             "/api/water/reservoirs/summary",
             "/api/water/advisory",
             "/api/system/health"
->>>>>>> c91b214e84f2d01ccc4a843f74a88b1a496eef61
         ]
     }
 
@@ -2081,11 +2074,7 @@ async def rollback_version_endpoint(version_id: str, req: ProposalApprovalReques
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to rollback version: {str(e)}")
 
-<<<<<<< HEAD
-=======
 
-
->>>>>>> c91b214e84f2d01ccc4a843f74a88b1a496eef61
 # -------------------------------------------------------------
 # ACTION CENTRE ENDPOINTS
 # -------------------------------------------------------------
@@ -2972,8 +2961,6 @@ async def sync_aurora_dataset_endpoint():
     Synchronizes local baseline datasets and audit records with Amazon Aurora.
     """
     return aurora_manager.sync_dataset_to_aurora()
-<<<<<<< HEAD
-=======
 
 
 # -------------------------------------------------------------
@@ -3030,5 +3017,3 @@ async def list_relief_facilities():
         "total": len(AMC_RELIEF_FACILITIES),
         "facilities": AMC_RELIEF_FACILITIES
     }
-
->>>>>>> c91b214e84f2d01ccc4a843f74a88b1a496eef61

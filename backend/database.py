@@ -354,8 +354,6 @@ def init_db() -> None:
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_impact_assessments_ward ON impact_assessments (ward_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_impact_assessments_interv ON impact_assessments (intervention_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_impact_history_assessment ON impact_assessment_history (assessment_id);")
-<<<<<<< HEAD
-=======
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_action_verif_action ON action_verifications (action_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_audit_action_id ON action_audit_events (action_id);")
 
@@ -415,7 +413,6 @@ def init_db() -> None:
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_res_date ON reservoir_observations (observation_date);")
     cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_res_unique ON reservoir_observations (reservoir_name, observation_date);")
 
->>>>>>> c91b214e84f2d01ccc4a843f74a88b1a496eef61
     conn.commit()
     conn.close()
 
