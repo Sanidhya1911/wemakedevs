@@ -4,10 +4,6 @@ import {
   CheckCheck, 
   XOctagon, 
   UserCheck, 
-  FileText, 
-  AlertCircle,
-  HelpCircle,
-  ShieldAlert,
   ArrowRight
 } from 'lucide-react';
 import { api } from '../api';
@@ -79,119 +75,105 @@ export default function ProposedUpdatesSection({ proposals = [], onProposalUpdat
   };
 
   return (
-    <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px' }}>
+    <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-xs mb-6">
       {/* Title & Governance Banner */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', padding: '8px', borderRadius: '8px' }}>
+      <div className="flex justify-between items-start flex-wrap gap-4 mb-5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 flex items-center justify-center font-bold">
             <GitPullRequest size={20} />
           </div>
           <div>
-            <h3 style={{ fontSize: '1.15rem', color: '#f8fafc', fontWeight: 600 }}>Proposed Model Parameter Updates</h3>
-            <p style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
+            <h3 className="text-base font-bold text-primary">Proposed Model Parameter Updates</h3>
+            <p className="text-xs text-on-surface-variant">
               Human-in-the-Loop Governance: Model parameters NEVER auto-mutate in production. All proposed weight calibrations require named municipal authorization.
             </p>
           </div>
         </div>
 
-        <span className={`badge ${pendingProposals.length > 0 ? 'badge-scheduled' : 'badge-completed'}`}>
+        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+          pendingProposals.length > 0 
+            ? 'bg-amber-50 text-amber-800 border border-amber-200' 
+            : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+        }`}>
           {pendingProposals.length > 0 ? `${pendingProposals.length} Pending Approval` : 'All Proposals Resolved'}
         </span>
       </div>
 
       {successMsg && (
-        <div style={{ padding: '10px 14px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '8px', color: '#34d399', fontSize: '0.82rem', marginBottom: '16px' }}>
+        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-medium mb-4.5">
           {successMsg}
         </div>
       )}
 
       {/* Pending Proposals Section */}
-      <div style={{ marginBottom: '24px' }}>
-        <h4 style={{ fontSize: '0.88rem', color: '#cbd5e1', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+      <div className="mb-6">
+        <h4 className="text-xs font-bold text-slate-700 mb-3 flex items-center gap-1.5">
           <span>Staged Proposals Awaiting Municipal Approval</span>
-          <span style={{ fontSize: '0.74rem', color: '#64748b' }}>({pendingProposals.length})</span>
+          <span className="text-outline font-mono">({pendingProposals.length})</span>
         </h4>
 
         {pendingProposals.length === 0 ? (
-          <div style={{ 
-            background: 'rgba(15, 23, 42, 0.5)', 
-            padding: '24px 16px', 
-            borderRadius: '10px', 
-            border: '1px dashed var(--border-subtle)',
-            textAlign: 'center',
-            color: '#94a3b8'
-          }}>
-            <UserCheck size={28} color="#34d399" style={{ margin: '0 auto 8px auto', opacity: 0.8 }} />
-            <div style={{ fontSize: '0.88rem', color: '#f8fafc', fontWeight: 500, marginBottom: '2px' }}>
+          <div className="bg-slate-50 p-6 rounded-xl border border-dashed border-slate-300 text-center text-outline">
+            <UserCheck size={28} className="text-emerald-600 mx-auto mb-2 opacity-80" />
+            <div className="text-xs font-bold text-on-surface mb-0.5">
               No Pending Proposals
             </div>
-            <p style={{ fontSize: '0.76rem', color: '#64748b' }}>
+            <p className="text-[11px] text-outline">
               Production risk parameters are calibrated and in consensus with verified real observations.
             </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="flex flex-col gap-3">
             {pendingProposals.map(prop => (
               <div 
                 key={prop.proposal_id}
-                style={{ 
-                  background: 'rgba(30, 41, 59, 0.5)', 
-                  border: '1px solid rgba(245, 158, 11, 0.3)', 
-                  borderRadius: '10px', 
-                  padding: '16px',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  flexWrap: 'wrap',
-                  gap: '14px'
-                }}
+                className="bg-amber-50/40 border border-amber-300 rounded-xl p-4 flex justify-between items-start flex-wrap gap-3.5"
               >
-                <div style={{ flex: 1, minWidth: '280px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: '#38bdf8' }}>
+                <div className="flex-1 min-w-[280px]">
+                  <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                    <span className="font-mono text-xs font-bold text-primary">
                       {prop.proposal_id}
                     </span>
-                    <span className="badge badge-scheduled">Pending Approval</span>
-                    <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 uppercase">
+                      Pending Approval
+                    </span>
+                    <span className="text-[11px] text-outline">
                       Supporting Evidence: <strong>{prop.supporting_samples_count} real observations</strong>
                     </span>
                   </div>
 
-                  <div style={{ fontSize: '0.9rem', color: '#f8fafc', fontWeight: 600, marginBottom: '4px' }}>
+                  <div className="text-sm font-bold text-on-surface mb-1">
                     Target: {prop.target_parameter_type} for Ward '{prop.target_identifier}'
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '0.82rem', margin: '8px 0', fontFamily: 'var(--font-mono)' }}>
-                    <span style={{ color: '#94a3b8' }}>Current: <strong>{prop.current_value}</strong></span>
-                    <ArrowRight size={14} color="#64748b" />
-                    <span style={{ color: '#38bdf8' }}>Proposed: <strong>{prop.proposed_value}</strong></span>
-                    <span style={{ 
-                      color: prop.delta > 0 ? '#fb7185' : '#34d399', 
-                      background: 'rgba(0,0,0,0.3)', 
-                      padding: '2px 6px', 
-                      borderRadius: '4px' 
-                    }}>
+                  <div className="flex items-center gap-2.5 text-xs font-mono my-2">
+                    <span className="text-outline">Current: <strong>{prop.current_value}</strong></span>
+                    <ArrowRight size={14} className="text-slate-400" />
+                    <span className="text-primary font-bold">Proposed: <strong>{prop.proposed_value}</strong></span>
+                    <span className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                      prop.delta > 0 
+                        ? 'bg-rose-50 text-rose-800 border border-rose-200' 
+                        : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                    }`}>
                       Delta: {prop.delta > 0 ? `+${prop.delta}` : prop.delta}
                     </span>
                   </div>
 
-                  <p style={{ fontSize: '0.78rem', color: '#cbd5e1', marginTop: '6px', lineHeight: 1.4 }}>
+                  <p className="text-xs text-slate-600 mt-1.5 leading-relaxed">
                     {prop.justification}
                   </p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '8px', alignSelf: 'center' }}>
+                <div className="flex gap-2 self-center">
                   <button 
                     onClick={() => handleOpenReject(prop)}
-                    className="btn btn-danger"
-                    style={{ padding: '6px 12px', fontSize: '0.78rem' }}
+                    className="h-8 px-3 bg-white border border-rose-300 text-rose-700 rounded-lg text-xs font-semibold hover:bg-rose-50 transition-colors cursor-pointer flex items-center gap-1.5"
                   >
                     <XOctagon size={13} /> Reject
                   </button>
                   <button 
                     onClick={() => handleOpenApprove(prop)}
-                    className="btn btn-success"
-                    style={{ padding: '6px 12px', fontSize: '0.78rem' }}
+                    className="h-8 px-3.5 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-[#1B5742] transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
                   >
                     <CheckCheck size={13} /> Authorize &amp; Deploy
                   </button>
@@ -205,42 +187,46 @@ export default function ProposedUpdatesSection({ proposals = [], onProposalUpdat
       {/* Historical Resolved Proposals */}
       {pastProposals.length > 0 && (
         <div>
-          <h4 style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: '10px' }}>
+          <h4 className="text-xs font-bold text-slate-700 mb-2.5">
             Archived Proposal Resolutions ({pastProposals.length})
           </h4>
-          <div style={{ overflowX: 'auto' }}>
-            <table className="data-table">
+          <div className="overflow-x-auto rounded-xl border border-outline-variant bg-surface-container-lowest">
+            <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr>
-                  <th>Proposal ID</th>
-                  <th>Target Parameter</th>
-                  <th>Value Change</th>
-                  <th>Status</th>
-                  <th>Reviewed By</th>
-                  <th>Review Notes</th>
+                <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-mono text-outline uppercase tracking-wider">
+                  <th className="py-2.5 px-3.5 font-semibold text-slate-700">Proposal ID</th>
+                  <th className="py-2.5 px-3.5 font-semibold text-slate-700">Target Parameter</th>
+                  <th className="py-2.5 px-3.5 font-semibold text-slate-700">Value Change</th>
+                  <th className="py-2.5 px-3.5 font-semibold text-slate-700">Status</th>
+                  <th className="py-2.5 px-3.5 font-semibold text-slate-700">Reviewed By</th>
+                  <th className="py-2.5 px-3.5 font-semibold text-slate-700">Review Notes</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100">
                 {pastProposals.map(p => (
-                  <tr key={p.proposal_id}>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.76rem', color: '#94a3b8' }}>
+                  <tr key={p.proposal_id} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3 px-3.5 font-mono text-xs font-bold text-primary">
                       {p.proposal_id}
                     </td>
-                    <td style={{ fontSize: '0.8rem' }}>
+                    <td className="py-3 px-3.5 font-medium text-on-surface">
                       {p.target_parameter_type} ({p.target_identifier})
                     </td>
-                    <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem' }}>
+                    <td className="py-3 px-3.5 font-mono text-xs text-outline">
                       {p.current_value} → {p.proposed_value} ({p.delta > 0 ? `+${p.delta}` : p.delta})
                     </td>
-                    <td>
-                      <span className={`badge ${p.status === 'APPROVED' ? 'badge-completed' : 'badge-failed'}`}>
+                    <td className="py-3 px-3.5">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                        p.status === 'APPROVED' 
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' 
+                          : 'bg-rose-50 text-rose-800 border border-rose-200'
+                      }`}>
                         {p.status}
                       </span>
                     </td>
-                    <td style={{ fontSize: '0.8rem', color: '#cbd5e1' }}>
+                    <td className="py-3 px-3.5 text-slate-600 font-medium">
                       {p.reviewed_by || '—'}
                     </td>
-                    <td style={{ fontSize: '0.76rem', color: '#94a3b8', maxWidth: '240px' }}>
+                    <td className="py-3 px-3.5 text-outline text-xs max-w-[240px]">
                       {p.review_notes || '—'}
                     </td>
                   </tr>
@@ -254,42 +240,38 @@ export default function ProposedUpdatesSection({ proposals = [], onProposalUpdat
       {/* Decision Modal */}
       {selectedProposal && modalMode && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ padding: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '1.1rem', color: '#f8fafc' }}>
+          <div className="modal-content p-6 max-w-lg">
+            <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
+              <h3 className="text-base font-bold text-primary">
                 {modalMode === 'APPROVE' ? 'Authorize Parameter Update' : 'Reject Parameter Update'}
               </h3>
               <button 
                 onClick={() => { setSelectedProposal(null); setModalMode(null); }}
-                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '1.2rem' }}
+                className="text-slate-400 hover:text-slate-600 text-lg cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <div style={{ 
-              background: modalMode === 'APPROVE' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)', 
-              border: `1px solid ${modalMode === 'APPROVE' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`,
-              padding: '10px 14px', 
-              borderRadius: '8px', 
-              fontSize: '0.8rem', 
-              color: modalMode === 'APPROVE' ? '#34d399' : '#fb7185',
-              marginBottom: '16px'
-            }}>
+            <div className={`p-3 rounded-lg text-xs font-medium mb-4 ${
+              modalMode === 'APPROVE' 
+                ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' 
+                : 'bg-rose-50 border border-rose-200 text-rose-800'
+            }`}>
               {modalMode === 'APPROVE' 
                 ? 'Approving will commit a new immutable model version (e.g. v1.1.0) and activate the new vulnerability offset.' 
                 : 'Rejecting will leave production model parameters unchanged and archive the proposal with documented rationale.'}
             </div>
 
             {error && (
-              <div style={{ padding: '10px 14px', background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.3)', borderRadius: '8px', color: '#fb7185', fontSize: '0.82rem', marginBottom: '16px' }}>
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700 mb-4 font-mono">
                 {error}
               </div>
             )}
 
-            <form onSubmit={handleConfirmDecision}>
-              <div style={{ marginBottom: '14px' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '6px' }}>
+            <form onSubmit={handleConfirmDecision} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   Authorizing Municipal Authority / Role *
                 </label>
                 <input 
@@ -298,15 +280,15 @@ export default function ProposedUpdatesSection({ proposals = [], onProposalUpdat
                   placeholder="e.g. AMC Health Officer, Disaster Mgmt Commissioner"
                   value={authorityName}
                   onChange={e => setAuthorityName(e.target.value)}
-                  className="form-input"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
-                <span style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '3px', display: 'block' }}>
+                <span className="text-[10px] text-outline mt-1 block">
                   Note: Logged for civic audit compliance.
                 </span>
               </div>
 
-              <div style={{ marginBottom: '18px' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', color: '#cbd5e1', marginBottom: '6px' }}>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
                   {modalMode === 'APPROVE' ? 'Review / Justification Notes (Optional)' : 'Documented Reason for Rejection *'}
                 </label>
                 <textarea 
@@ -315,22 +297,24 @@ export default function ProposedUpdatesSection({ proposals = [], onProposalUpdat
                   placeholder={modalMode === 'APPROVE' ? 'Document rationale or supporting context...' : 'Reason for rejecting this calibration proposal...'}
                   value={reviewNotes}
                   onChange={e => setReviewNotes(e.target.value)}
-                  className="form-input"
+                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-200">
                 <button 
                   type="button" 
                   onClick={() => { setSelectedProposal(null); setModalMode(null); }}
-                  className="btn btn-secondary"
+                  className="px-3.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
                   disabled={loading}
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className={`btn ${modalMode === 'APPROVE' ? 'btn-success' : 'btn-danger'}`}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-semibold cursor-pointer disabled:opacity-60 text-white ${
+                    modalMode === 'APPROVE' ? 'bg-primary hover:bg-[#1B5742]' : 'bg-rose-700 hover:bg-rose-800'
+                  }`}
                   disabled={loading}
                 >
                   {loading ? 'Processing...' : (modalMode === 'APPROVE' ? 'Commit & Activate Version' : 'Confirm Rejection')}

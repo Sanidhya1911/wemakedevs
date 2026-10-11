@@ -9,14 +9,9 @@ import {
   GitPullRequest, 
   GitCommit, 
   RefreshCw, 
-  AlertCircle,
-  Database,
-  Cpu,
-  Layers,
-  Sparkles
+  AlertCircle
 } from 'lucide-react';
 import { api } from '../api';
-import ProvenanceBadge from './ProvenanceBadge';
 import RiskTimeSeriesSection from './RiskTimeSeriesSection';
 import InterventionHistorySection from './InterventionHistorySection';
 import VerifiedOutcomesSection from './VerifiedOutcomesSection';
@@ -66,8 +61,8 @@ export default function LearningLoopDashboard() {
         activeRes,
         wardsRes
       ] = await Promise.all([
-        api.getPredictions({ limit: 150 }).catch(() => ({ predictions: [] })),
-        api.getActions({ limit: 100 }).catch(() => ({ actions: [] })),
+        api.getPredictions({ limit: 300 }).catch(() => ({ predictions: [] })),
+        api.getActions({ limit: 200 }).catch(() => ({ actions: [] })),
         api.getOutcomes({ limit: 200 }).catch(() => ({ outcomes: [] })),
         api.getEvaluations(20).catch(() => ({ evaluations: [] })),
         api.getProposals().catch(() => ({ proposals: [] })),
@@ -101,80 +96,45 @@ export default function LearningLoopDashboard() {
   const realOutcomesCount = outcomes.filter(o => o.provenance === 'REAL').length;
 
   return (
-    <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 16px' }}>
-      {/* Live Command Center Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
+    <div className="space-y-6">
+      {/* Page Header (Matches Other App Pages) */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-2 border-b border-outline-variant">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-            <div style={{ 
-              background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.2))', 
-              border: '1px solid rgba(56, 189, 248, 0.4)',
-              padding: '10px', 
-              borderRadius: '12px', 
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 15px rgba(6, 182, 212, 0.2)'
-            }}>
-              <Shield size={26} color="#38bdf8" />
-            </div>
-            <div>
-              <h1 style={{ fontSize: '1.6rem', color: '#f8fafc', fontWeight: 700, letterSpacing: '-0.02em' }}>
-                ClimateShield Learning Loop
-              </h1>
-              <div style={{ fontSize: '0.84rem', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <span>Ahmedabad Municipal Corporation Closed-Loop Calibration &amp; Model Governance</span>
-              </div>
-            </div>
+          <div className="flex items-center gap-2 font-mono text-[10px] text-outline mb-0.5 uppercase tracking-wider">
+            <span>AMC Command Center</span>
+            <span>/</span>
+            <span className="text-primary font-bold">Learning Loop & Model Governance</span>
           </div>
+          <h1 className="text-headline-md font-headline-md text-primary font-bold">
+            ClimateShield Learning Loop
+          </h1>
+          <p className="text-xs text-on-surface-variant mt-0.5">
+            Ahmedabad Municipal Corporation Closed-Loop Calibration &amp; Model Governance
+          </p>
         </div>
 
         {/* Status Indicators & Refresh */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '8px', 
-            background: 'rgba(15, 23, 42, 0.8)', 
-            padding: '6px 12px', 
-            borderRadius: '9999px',
-            border: '1px solid var(--border-subtle)',
-            fontSize: '0.78rem'
-          }}>
-            <span 
-              className="pulse-dot" 
-              style={{ background: backendStatus === 'ONLINE' ? '#10b981' : '#f43f5e' }}
-            />
-            <span style={{ color: backendStatus === 'ONLINE' ? '#34d399' : '#fb7185', fontWeight: 600 }}>
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-lowest border border-outline-variant text-xs font-mono">
+            <span className={`w-2 h-2 rounded-full ${backendStatus === 'ONLINE' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`} />
+            <span className={backendStatus === 'ONLINE' ? 'text-emerald-800 font-semibold' : 'text-rose-800 font-semibold'}>
               {backendStatus === 'ONLINE' ? 'FastAPI Connected' : 'Backend Offline'}
             </span>
           </div>
 
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '6px', 
-            background: 'rgba(15, 23, 42, 0.8)', 
-            padding: '6px 12px', 
-            borderRadius: '9999px',
-            border: '1px solid var(--border-subtle)',
-            fontSize: '0.78rem'
-          }}>
-            <span style={{ color: '#94a3b8' }}>Active Model:</span>
-            <span style={{ color: '#38bdf8', fontWeight: 600, fontFamily: 'var(--font-mono)' }}>
-              {activeParams?.version_id || 'v1.0.0'}
-            </span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-lowest border border-outline-variant text-xs font-mono">
+            <span className="text-outline">Active Model:</span>
+            <span className="text-primary font-bold">{activeParams?.version_id || 'v1.0.0'}</span>
           </div>
 
-          <button 
-            onClick={loadAllData} 
+          <button
+            onClick={loadAllData}
             disabled={loading}
-            className="btn btn-secondary"
-            style={{ padding: '6px 12px', fontSize: '0.8rem' }}
+            className="h-9 px-4 bg-primary text-white rounded-lg text-xs font-semibold flex items-center gap-2 hover:bg-[#1B5742] shadow-sm transition-all cursor-pointer disabled:opacity-60"
             title="Reload live database records"
           >
-            <RefreshCw size={13} className={loading ? 'spin' : ''} />
-            {loading ? 'Refreshing...' : 'Refresh'}
+            <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+            <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
           </button>
         </div>
       </div>
@@ -182,152 +142,153 @@ export default function LearningLoopDashboard() {
       {/* Demo Controls Bar */}
       <DemoDataHelper onDataChanged={loadAllData} />
 
-      {/* Global Summary KPI Bar */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', 
-        gap: '14px', 
-        marginBottom: '24px' 
-      }}>
-        <div className="glass-panel" style={{ padding: '16px' }}>
-          <div style={{ fontSize: '0.74rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Risk Predictions
-          </div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#f8fafc', marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
-            {predictions.length}
-          </div>
-          <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '4px' }}>
-            Historical forecasts stored
-          </div>
-        </div>
-
-        <div className="glass-panel" style={{ padding: '16px' }}>
-          <div style={{ fontSize: '0.74rem', color: '#38bdf8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Dispatched Actions
-          </div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#38bdf8', marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
-            {actions.length}
-          </div>
-          <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '4px' }}>
-            {actions.filter(a => a.execution_status === 'COMPLETED').length} verified completed
-          </div>
-        </div>
-
-        <div className="glass-panel" style={{ padding: '16px' }}>
-          <div style={{ fontSize: '0.74rem', color: '#34d399', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Observed Outcomes
-          </div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#34d399', marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
-            {outcomes.length}
-          </div>
-          <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '4px' }}>
-            {realOutcomesCount} verified real (Non-PII)
-          </div>
-        </div>
-
-        <div className="glass-panel" style={{ padding: '16px' }}>
-          <div style={{ fontSize: '0.74rem', color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Calibration Status
-          </div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: pendingProposalsCount > 0 ? '#f59e0b' : '#34d399', marginTop: '2px', fontFamily: 'var(--font-mono)' }}>
-            {pendingProposalsCount > 0 ? `${pendingProposalsCount} Staged` : 'Stable'}
-          </div>
-          <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: '4px' }}>
-            {pendingProposalsCount > 0 ? 'Pending municipal sign-off' : 'Parameters in consensus'}
-          </div>
-        </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="tabs-container" style={{ marginBottom: '24px' }}>
-        <button 
-          onClick={() => setActiveTab('timeseries')}
-          className={`tab-btn ${activeTab === 'timeseries' ? 'active' : ''}`}
-        >
-          <TrendingUp size={15} />
-          Predicted vs. Observed Risk
-        </button>
-
-        <button 
-          onClick={() => setActiveTab('actions')}
-          className={`tab-btn ${activeTab === 'actions' ? 'active' : ''}`}
-        >
-          <ClipboardCheck size={15} />
-          Intervention History ({actions.length})
-        </button>
-
-        <button 
-          onClick={() => setActiveTab('outcomes')}
-          className={`tab-btn ${activeTab === 'outcomes' ? 'active' : ''}`}
-        >
-          <CheckCircle2 size={15} />
-          Verified Outcomes ({outcomes.length})
-        </button>
-
-        <button 
-          onClick={() => setActiveTab('metrics')}
-          className={`tab-btn ${activeTab === 'metrics' ? 'active' : ''}`}
-        >
-          <BarChart3 size={15} />
-          Multi-Hazard Accuracy
-        </button>
-
-        <button 
-          onClick={() => setActiveTab('trends')}
-          className={`tab-btn ${activeTab === 'trends' ? 'active' : ''}`}
-        >
-          <History size={15} />
-          Trends &amp; Data Gaps
-        </button>
-
-        <button 
-          onClick={() => setActiveTab('proposals')}
-          className={`tab-btn ${activeTab === 'proposals' ? 'active' : ''}`}
-        >
-          <GitPullRequest size={15} />
-          Proposed Updates
-          {pendingProposalsCount > 0 && (
-            <span style={{ 
-              background: '#f59e0b', 
-              color: '#0f172a', 
-              fontSize: '0.65rem', 
-              fontWeight: 700, 
-              padding: '1px 6px', 
-              borderRadius: '9999px',
-              marginLeft: '4px' 
-            }}>
-              {pendingProposalsCount}
+      {/* Global Summary KPI Bar (5-Card Grid matching ImpactVerificationPage) */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="bg-surface-container-lowest p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-colors">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono text-outline uppercase tracking-wider font-bold">
+              RISK PREDICTIONS
             </span>
-          )}
-        </button>
+            <span className="p-1.5 rounded-lg bg-sky-50 text-sky-800 border border-sky-200">
+              <span className="material-symbols-outlined text-[18px]">query_stats</span>
+            </span>
+          </div>
+          <div className="mt-2">
+            <div className="text-display-lg font-display-lg text-primary font-bold leading-none tabular-nums">
+              {predictions.length}
+            </div>
+            <div className="text-title-sm font-title-sm text-on-surface mt-1 font-semibold">
+              Forecast Records
+            </div>
+          </div>
+          <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono">
+            <span className="text-outline">Database Archive</span>
+            <span className="text-primary font-semibold">Live Stored</span>
+          </div>
+        </div>
 
-        <button 
-          onClick={() => setActiveTab('versions')}
-          className={`tab-btn ${activeTab === 'versions' ? 'active' : ''}`}
-        >
-          <GitCommit size={15} />
-          Model Versions ({versions.length})
-        </button>
+        <div className="bg-surface-container-lowest p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-colors">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono text-outline uppercase tracking-wider font-bold">
+              DISPATCHED ACTIONS
+            </span>
+            <span className="p-1.5 rounded-lg bg-indigo-50 text-indigo-800 border border-indigo-200">
+              <span className="material-symbols-outlined text-[18px]">campaign</span>
+            </span>
+          </div>
+          <div className="mt-2">
+            <div className="text-display-lg font-display-lg text-indigo-800 font-bold leading-none tabular-nums">
+              {actions.length}
+            </div>
+            <div className="text-title-sm font-title-sm text-on-surface mt-1 font-semibold">
+              Municipal Interventions
+            </div>
+          </div>
+          <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono">
+            <span className="text-outline">Execution Status</span>
+            <span className="text-emerald-800 font-semibold">{actions.filter(a => a.execution_status === 'COMPLETED').length} Completed</span>
+          </div>
+        </div>
+
+        <div className="bg-surface-container-lowest p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-colors">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono text-outline uppercase tracking-wider font-bold">
+              OBSERVED OUTCOMES
+            </span>
+            <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <span className="material-symbols-outlined text-[18px]">task_alt</span>
+            </span>
+          </div>
+          <div className="mt-2">
+            <div className="text-display-lg font-display-lg text-emerald-800 font-bold leading-none tabular-nums">
+              {outcomes.length}
+            </div>
+            <div className="text-title-sm font-title-sm text-on-surface mt-1 font-semibold">
+              Ground-Truth Observations
+            </div>
+          </div>
+          <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono">
+            <span className="text-outline">Verified Real</span>
+            <span className="text-emerald-800 font-semibold">{realOutcomesCount} Non-PII</span>
+          </div>
+        </div>
+
+        <div className="bg-surface-container-lowest p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-colors">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-mono text-outline uppercase tracking-wider font-bold">
+              CALIBRATION STATUS
+            </span>
+            <span className={`p-1.5 rounded-lg border ${pendingProposalsCount > 0 ? 'bg-amber-50 text-amber-800 border-amber-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}`}>
+              <span className="material-symbols-outlined text-[18px]">tune</span>
+            </span>
+          </div>
+          <div className="mt-2">
+            <div className={`text-display-lg font-display-lg font-bold leading-none tabular-nums ${pendingProposalsCount > 0 ? 'text-amber-800' : 'text-emerald-800'}`}>
+              {pendingProposalsCount > 0 ? `${pendingProposalsCount} Staged` : 'Stable'}
+            </div>
+            <div className="text-title-sm font-title-sm text-on-surface mt-1 font-semibold">
+              Parameter Consensus
+            </div>
+          </div>
+          <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] font-mono">
+            <span className="text-outline">Governance</span>
+            <span className={pendingProposalsCount > 0 ? 'text-amber-800 font-semibold' : 'text-emerald-800 font-semibold'}>
+              {pendingProposalsCount > 0 ? 'Pending sign-off' : 'In Consensus'}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* Tab Navigation Strip (Clean Light UI) */}
+      <div className="flex items-center gap-1.5 bg-surface-container-lowest p-1.5 rounded-xl border border-outline-variant overflow-x-auto shadow-xs">
+        {[
+          { id: 'timeseries', label: 'Predicted vs. Observed Risk', icon: TrendingUp },
+          { id: 'actions', label: `Intervention History (${actions.length})`, icon: ClipboardCheck },
+          { id: 'outcomes', label: `Verified Outcomes (${outcomes.length})`, icon: CheckCircle2 },
+          { id: 'metrics', label: 'Multi-Hazard Accuracy', icon: BarChart3 },
+          { id: 'trends', label: 'Trends & Data Gaps', icon: History },
+          { id: 'proposals', label: 'Proposed Updates', icon: GitPullRequest, badge: pendingProposalsCount },
+          { id: 'versions', label: `Model Versions (${versions.length})`, icon: GitCommit },
+        ].map(tab => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                isActive
+                  ? 'bg-primary text-white shadow-xs'
+                  : 'text-on-surface-variant hover:text-on-surface hover:bg-slate-100'
+              }`}
+            >
+              <Icon size={14} />
+              <span>{tab.label}</span>
+              {tab.badge > 0 && (
+                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  isActive ? 'bg-white text-primary' : 'bg-amber-100 text-amber-800 border border-amber-200'
+                }`}>
+                  {tab.badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Error Banner */}
       {error && (
-        <div style={{ 
-          padding: '14px 18px', 
-          background: 'rgba(244, 63, 94, 0.15)', 
-          border: '1px solid rgba(244, 63, 94, 0.4)', 
-          borderRadius: '10px', 
-          color: '#fb7185', 
-          fontSize: '0.85rem', 
-          marginBottom: '24px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px'
-        }}>
-          <AlertCircle size={20} />
-          <div>
-            <strong>Backend Connection Notice:</strong> {error}
+        <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-center justify-between text-xs text-error">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-[18px]">error</span>
+            <span className="font-mono"><strong>Backend Connection Notice:</strong> {error}</span>
           </div>
+          <button
+            onClick={loadAllData}
+            className="px-3 py-1 bg-white border border-red-300 rounded font-mono font-bold hover:bg-red-50 cursor-pointer"
+          >
+            Retry
+          </button>
         </div>
       )}
 

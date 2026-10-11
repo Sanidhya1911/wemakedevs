@@ -5,9 +5,7 @@ import {
   Droplet, 
   Waves, 
   RefreshCw, 
-  CheckCircle2, 
   AlertTriangle,
-  Sparkles,
   Info
 } from 'lucide-react';
 import { api } from '../api';
@@ -42,30 +40,19 @@ export default function PerformanceMetricsSection({ latestEvaluation, onEvaluati
     const hasData = metrics && metrics.sample_count > 0 && metrics.status !== 'INSUFFICIENT_DATA';
 
     return (
-      <div style={{ 
-        background: 'rgba(15, 23, 42, 0.7)', 
-        borderRadius: '12px', 
-        border: '1px solid var(--border-subtle)',
-        padding: '18px',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between'
-      }}>
+      <div className="bg-white rounded-xl border border-slate-200 p-4.5 flex flex-col justify-between shadow-2xs hover:border-slate-300 transition-colors">
         <div>
           {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ 
-                background: colorTheme.bg, 
-                color: colorTheme.color, 
-                padding: '6px', 
-                borderRadius: '6px' 
-              }}>
+          <div className="flex justify-between items-center mb-3.5">
+            <div className="flex items-center gap-2.5">
+              <div className={`p-2 rounded-lg ${colorTheme.bg} ${colorTheme.color}`}>
                 {icon}
               </div>
-              <h4 style={{ fontSize: '0.95rem', color: '#f8fafc', fontWeight: 600 }}>{title}</h4>
+              <h4 className="text-sm font-bold text-on-surface">{title}</h4>
             </div>
-            <span className={`badge ${hasData ? 'badge-completed' : 'badge-unverified'}`}>
+            <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+              hasData ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'
+            }`}>
               {hasData ? `${metrics.sample_count} Samples` : 'Insufficient Data'}
             </span>
           </div>
@@ -73,38 +60,38 @@ export default function PerformanceMetricsSection({ latestEvaluation, onEvaluati
           {/* Metrics Values */}
           {hasData ? (
             <div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
-                <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '10px', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>MAE (Mean Absolute Error)</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#f8fafc', fontFamily: 'var(--font-mono)' }}>
-                    {metrics.mae} <span style={{ fontSize: '0.75rem', color: '#64748b' }}>pts</span>
+              <div className="grid grid-cols-2 gap-2.5 mb-3.5">
+                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                  <div className="text-[11px] text-outline font-semibold">MAE (Mean Error)</div>
+                  <div className="text-lg font-bold font-mono text-primary mt-0.5">
+                    {metrics.mae} <span className="text-[11px] text-outline font-sans">pts</span>
                   </div>
                 </div>
-                <div style={{ background: 'rgba(30, 41, 59, 0.5)', padding: '10px', borderRadius: '8px' }}>
-                  <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>RMSE (Root Mean Square)</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#f8fafc', fontFamily: 'var(--font-mono)' }}>
-                    {metrics.rmse} <span style={{ fontSize: '0.75rem', color: '#64748b' }}>pts</span>
+                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                  <div className="text-[11px] text-outline font-semibold">RMSE (Root Mean Sq)</div>
+                  <div className="text-lg font-bold font-mono text-primary mt-0.5">
+                    {metrics.rmse} <span className="text-[11px] text-outline font-sans">pts</span>
                   </div>
                 </div>
               </div>
 
               {/* Classification Metrics */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px', marginBottom: '14px' }}>
-                <div style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.03)', padding: '6px', borderRadius: '6px' }}>
-                  <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>Precision</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#38bdf8' }}>
+              <div className="grid grid-cols-3 gap-1.5 mb-3.5">
+                <div className="text-center bg-slate-50 p-2 rounded-lg border border-slate-100">
+                  <div className="text-[10px] text-outline font-semibold uppercase">Precision</div>
+                  <div className="text-sm font-bold font-mono text-sky-800 mt-0.5">
                     {Math.round((metrics.precision || 0) * 100)}%
                   </div>
                 </div>
-                <div style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.03)', padding: '6px', borderRadius: '6px' }}>
-                  <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>Recall</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#34d399' }}>
+                <div className="text-center bg-slate-50 p-2 rounded-lg border border-slate-100">
+                  <div className="text-[10px] text-outline font-semibold uppercase">Recall</div>
+                  <div className="text-sm font-bold font-mono text-emerald-800 mt-0.5">
                     {Math.round((metrics.recall || 0) * 100)}%
                   </div>
                 </div>
-                <div style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.03)', padding: '6px', borderRadius: '6px' }}>
-                  <div style={{ fontSize: '0.68rem', color: '#94a3b8' }}>F1 Score</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#fbbf24' }}>
+                <div className="text-center bg-slate-50 p-2 rounded-lg border border-slate-100">
+                  <div className="text-[10px] text-outline font-semibold uppercase">F1 Score</div>
+                  <div className="text-sm font-bold font-mono text-amber-800 mt-0.5">
                     {metrics.f1_score ?? '0.00'}
                   </div>
                 </div>
@@ -112,29 +99,29 @@ export default function PerformanceMetricsSection({ latestEvaluation, onEvaluati
 
               {/* Confusion Matrix Breakdown */}
               {metrics.confusion_matrix && (
-                <div style={{ fontSize: '0.72rem', color: '#94a3b8', background: 'rgba(0, 0, 0, 0.2)', padding: '8px 10px', borderRadius: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                <div className="text-[11px] text-on-surface-variant bg-slate-50 p-2.5 rounded-lg border border-slate-200 space-y-1">
+                  <div className="flex justify-between">
                     <span>True Positives (Correct alerts):</span>
-                    <strong style={{ color: '#34d399' }}>{metrics.confusion_matrix.true_positives}</strong>
+                    <strong className="text-emerald-800 font-mono">{metrics.confusion_matrix.true_positives}</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                  <div className="flex justify-between">
                     <span>False Positives (Unneeded alerts):</span>
-                    <strong style={{ color: '#fb7185' }}>{metrics.confusion_matrix.false_positives}</strong>
+                    <strong className="text-amber-800 font-mono">{metrics.confusion_matrix.false_positives}</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div className="flex justify-between">
                     <span>False Negatives (Missed spikes):</span>
-                    <strong style={{ color: '#f43f5e' }}>{metrics.confusion_matrix.false_negatives}</strong>
+                    <strong className="text-rose-800 font-mono">{metrics.confusion_matrix.false_negatives}</strong>
                   </div>
                 </div>
               )}
             </div>
           ) : (
-            <div style={{ padding: '20px 10px', textAlign: 'center', color: '#94a3b8' }}>
-              <AlertTriangle size={24} color="#f59e0b" style={{ margin: '0 auto 8px auto', opacity: 0.8 }} />
-              <div style={{ fontSize: '0.82rem', color: '#f8fafc', fontWeight: 500, marginBottom: '4px' }}>
+            <div className="p-5 text-center text-outline">
+              <AlertTriangle size={24} className="text-amber-600 mx-auto mb-2 opacity-80" />
+              <div className="text-xs font-semibold text-on-surface mb-1">
                 Evidence Below Threshold
               </div>
-              <p style={{ fontSize: '0.74rem', color: '#64748b' }}>
+              <p className="text-[11px] text-outline">
                 Requires minimum 3 verified real observations to compute statistical accuracy. Simulated demonstration data is excluded.
               </p>
             </div>
@@ -142,7 +129,7 @@ export default function PerformanceMetricsSection({ latestEvaluation, onEvaluati
         </div>
 
         {/* Footer Note */}
-        <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(255, 255, 255, 0.05)', fontSize: '0.7rem', color: '#64748b' }}>
+        <div className="mt-3 pt-2.5 border-t border-slate-100 text-[10px] text-outline font-mono">
           Alert boundary: Risk score ≥ 50 pts
         </div>
       </div>
@@ -150,16 +137,16 @@ export default function PerformanceMetricsSection({ latestEvaluation, onEvaluati
   };
 
   return (
-    <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px' }}>
+    <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-xs mb-6">
       {/* Header and Trigger Button */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b', padding: '8px', borderRadius: '8px' }}>
+      <div className="flex justify-between items-start flex-wrap gap-4 mb-5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 flex items-center justify-center font-bold">
             <BarChart3 size={20} />
           </div>
           <div>
-            <h3 style={{ fontSize: '1.15rem', color: '#f8fafc', fontWeight: 600 }}>Multi-Hazard Prediction Accuracy Metrics</h3>
-            <p style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
+            <h3 className="text-base font-bold text-primary">Multi-Hazard Prediction Accuracy Metrics</h3>
+            <p className="text-xs text-on-surface-variant">
               Separately evaluates Heatwave, Pluvial Flood, and Water Scarcity models against verified municipal outcomes
             </p>
           </div>
@@ -168,69 +155,53 @@ export default function PerformanceMetricsSection({ latestEvaluation, onEvaluati
         <button 
           onClick={handleRunEvaluation}
           disabled={runningEval}
-          className="btn btn-primary"
-          style={{ fontSize: '0.82rem' }}
+          className="h-8 px-3.5 bg-primary text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 hover:bg-[#1B5742] shadow-xs cursor-pointer disabled:opacity-60 transition-all"
         >
-          <RefreshCw size={14} className={runningEval ? 'spin' : ''} />
-          {runningEval ? 'Evaluating Real Pairs...' : 'Run Statistical Evaluation'}
+          <RefreshCw size={14} className={runningEval ? 'animate-spin' : ''} />
+          <span>{runningEval ? 'Evaluating Real Pairs...' : 'Run Statistical Evaluation'}</span>
         </button>
       </div>
 
       {/* Evaluation Feedback Message */}
       {evalMsg && (
-        <div style={{ 
-          padding: '10px 14px', 
-          background: evalMsg.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)', 
-          border: `1px solid ${evalMsg.type === 'success' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(244, 63, 94, 0.3)'}`,
-          borderRadius: '8px', 
-          color: evalMsg.type === 'success' ? '#34d399' : '#fb7185', 
-          fontSize: '0.82rem', 
-          marginBottom: '18px' 
-        }}>
+        <div className={`p-3 rounded-xl border text-xs mb-4.5 font-medium ${
+          evalMsg.type === 'success' 
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+            : 'bg-rose-50 border-rose-200 text-rose-800'
+        }`}>
           {evalMsg.text}
         </div>
       )}
 
       {/* Epistemic Guardrail Notice */}
-      <div style={{ 
-        display: 'flex', 
-        alignItems: 'center', 
-        gap: '8px', 
-        background: 'rgba(15, 23, 42, 0.6)', 
-        padding: '10px 14px', 
-        borderRadius: '8px', 
-        border: '1px solid var(--border-subtle)',
-        marginBottom: '20px',
-        fontSize: '0.78rem',
-        color: '#cbd5e1'
-      }}>
-        <Info size={16} color="#38bdf8" />
+      <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-xl border border-slate-200 mb-5 text-xs text-on-surface-variant">
+        <Info size={16} className="text-primary shrink-0" />
         <span>
           <strong>Scientific Integrity Guardrail:</strong> Accuracy metrics are computed strictly against empirical real observations. Simulated data and incomplete actions are safely filtered out to prevent artificial metric inflation.
         </span>
       </div>
 
       {/* Hazard-Specific Accuracy Metric Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {renderMetricCard(
           'Heatwave Risk Accuracy',
           <Flame size={18} />,
           heatMetrics,
-          { bg: 'rgba(244, 63, 94, 0.15)', color: '#fb7185' }
+          { bg: 'bg-rose-50', color: 'text-rose-800' }
         )}
 
         {renderMetricCard(
           'Waterlogging / Flood Accuracy',
           <Waves size={18} />,
           floodMetrics,
-          { bg: 'rgba(6, 182, 212, 0.15)', color: '#06b6d4' }
+          { bg: 'bg-teal-50', color: 'text-teal-800' }
         )}
 
         {renderMetricCard(
           'Water Shortage Accuracy',
           <Droplet size={18} />,
           shortageMetrics,
-          { bg: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6' }
+          { bg: 'bg-sky-50', color: 'text-sky-800' }
         )}
       </div>
     </div>

@@ -68,20 +68,33 @@ class ProposalRejectionRequest(BaseModel):
 # METRIC EVALUATION HELPERS
 # ---------------------------------------------------------------------------
 
+def _canonical_hazard(hz: str) -> str:
+    """Normalizes hazard type string across variations and aliases."""
+    h = (hz or "").lower().strip().replace("-", "_")
+    if h in ["waterlogging", "flood", "pluvial_flood", "water_logging", "drainage"]:
+        return "waterlogging"
+    if h in ["water_shortage", "water_scarcity", "drought", "shortage", "water_supply"]:
+        return "water_shortage"
+    if h in ["heat", "heatwave", "extreme_heat"]:
+        return "heat"
+    return h
+
+
 def _normalize_outcome_to_risk_scale(hazard_type: str, outcome: Dict[str, Any]) -> float:
     """
     Maps observed municipal health/civic impact metrics to a 0 - 100 risk equivalent proxy.
     """
-    if hazard_type == "heat":
+    can_hz = _canonical_hazard(hazard_type)
+    if can_hz == "heat":
         admissions = float(outcome.get("hospital_heat_admissions") or 0.0)
         calls = float(outcome.get("emergency_108_calls") or 0.0)
         # Proxy: 8 pts per admission + 4 pts per emergency call
         return min(100.0, (admissions * 8.0) + (calls * 4.0))
-    elif hazard_type == "waterlogging":
+    elif can_hz == "waterlogging":
         depth_cm = float(outcome.get("waterlogging_depth_cm") or 0.0)
         # Proxy: 2 pts per cm depth (50cm = 100 max risk)
         return min(100.0, depth_cm * 2.0)
-    elif hazard_type == "water_shortage":
+    elif can_hz == "water_shortage":
         complaints = float(outcome.get("water_scarcity_complaints") or 0.0)
         # Proxy: 4 pts per complaint (25 complaints = 100 max risk)
         return min(100.0, complaints * 4.0)
@@ -181,14 +194,15 @@ def run_model_evaluation(req: ModelEvaluationRequest) -> Dict[str, Any]:
             continue
 
         p_ward = p["ward_id"]
-        p_hazard = p["hazard_type"]
+        p_hazard = _canonical_hazard(p["hazard_type"])
         p_score = float(p["predicted_risk_score"])
         p_date = str(p.get("timestamp"))[:10]
 
         # Find contemporaneous outcome in the same ward with matching hazard domain
         for o in real_outcomes:
             o_date = str(o.get("measurement_date"))[:10]
-            if o["ward_id"] == p_ward and o.get("hazard_type") == p_hazard:
+            o_hazard = _canonical_hazard(o.get("hazard_type"))
+            if o["ward_id"] == p_ward and o_hazard == p_hazard:
                 try:
                     d_p = datetime.strptime(p_date, "%Y-%m-%d")
                     d_o = datetime.strptime(o_date, "%Y-%m-%d")

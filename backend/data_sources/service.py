@@ -17,6 +17,7 @@ from backend.data_sources.era5_land import ERA5LandClient
 from backend.data_sources.ecostress import ECOSTRESSClient
 from backend.data_sources.fusion import DataFusionEngine
 
+# Import existing engines
 from backend.wbgt_pipeline import calculate_outdoor_wbgt, classify_wbgt_risk
 
 logger = logging.getLogger("climateshield.data_sources.service")
@@ -158,7 +159,7 @@ class DataSourcesService:
         ward_profiles = fused_profiles.get("fused_ward_profiles", [])
         rain_24h = ward_profiles[0].get("rainfall_24h_mm", 0.0) if ward_profiles else 0.0
         peak_1h = ward_profiles[0].get("peak_hourly_rainfall_mm", 0.0) if ward_profiles else 0.0
-
+        # Run Combined Risk Engine with fused meteorological parameters
         from backend.combined_risk_engine import evaluate_combined_climate_risk
         combined_results = await evaluate_combined_climate_risk(
             weight_heat=weight_heat,

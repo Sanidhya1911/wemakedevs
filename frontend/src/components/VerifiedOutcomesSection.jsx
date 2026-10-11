@@ -3,16 +3,12 @@ import {
   ShieldCheck, 
   PlusCircle, 
   Lock, 
-  HelpCircle, 
   Database, 
-  AlertCircle,
   Activity,
   PhoneCall,
   Droplets,
-  Waves,
-  Building2
+  Waves
 } from 'lucide-react';
-import ProvenanceBadge from './ProvenanceBadge';
 import { api } from '../api';
 
 export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onOutcomeRecorded }) {
@@ -94,26 +90,25 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
   };
 
   return (
-    <div className="glass-panel" style={{ padding: '24px', marginBottom: '24px' }}>
+    <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant shadow-xs mb-6">
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '20px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', padding: '8px', borderRadius: '8px' }}>
+      <div className="flex justify-between items-start flex-wrap gap-4 mb-5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center justify-center font-bold">
             <ShieldCheck size={20} />
           </div>
           <div>
-            <h3 style={{ fontSize: '1.15rem', color: '#f8fafc', fontWeight: 600 }}>Ground-Truth Municipal Outcomes</h3>
-            <p style={{ fontSize: '0.82rem', color: '#94a3b8' }}>
+            <h3 className="text-base font-bold text-primary">Ground-Truth Municipal Outcomes</h3>
+            <p className="text-xs text-on-surface-variant">
               Aggregated post-intervention civic observations from AMC Health Surveillance, 108 Emergency Services, and CCRS 155303
             </p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <div className="flex gap-2.5 items-center">
           <button 
             onClick={() => setShowAddModal(true)}
-            className="btn btn-primary"
-            style={{ fontSize: '0.82rem' }}
+            className="h-8 px-3.5 bg-primary text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 hover:bg-[#1B5742] shadow-xs transition-all cursor-pointer"
           >
             <PlusCircle size={15} /> Log Municipal Outcome
           </button>
@@ -121,75 +116,64 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
       </div>
 
       {/* Multi-Hazard Domain Filters & Search Toolbar */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        flexWrap: 'wrap', 
-        gap: '12px',
-        marginBottom: '16px',
-        background: 'rgba(15, 23, 42, 0.4)',
-        padding: '10px 14px',
-        borderRadius: '8px',
-        border: '1px solid var(--border-subtle)'
-      }}>
+      <div className="flex justify-between items-center flex-wrap gap-3 mb-4 bg-slate-50 p-3 rounded-xl border border-slate-200">
         {/* Domain Tabs */}
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.74rem', color: '#94a3b8', marginRight: '4px', fontWeight: 600, textTransform: 'uppercase' }}>
+        <div className="flex gap-1.5 flex-wrap items-center">
+          <span className="text-[11px] text-slate-500 mr-1 font-semibold uppercase tracking-wider">
             Domain:
           </span>
           <button
+            type="button"
             onClick={() => setSelectedDomain('ALL')}
-            className={`btn ${selectedDomain === 'ALL' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ padding: '4px 10px', fontSize: '0.76rem' }}
+            className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-colors cursor-pointer ${
+              selectedDomain === 'ALL'
+                ? 'bg-primary text-white shadow-xs'
+                : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+            }`}
           >
             All Domains ({outcomes.length})
           </button>
           <button
+            type="button"
             onClick={() => setSelectedDomain('heat')}
-            className={`btn ${selectedDomain === 'heat' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ 
-              padding: '4px 10px', 
-              fontSize: '0.76rem',
-              borderColor: selectedDomain === 'heat' ? '#f43f5e' : undefined,
-              color: selectedDomain === 'heat' ? '#fff' : '#fda4af'
-            }}
+            className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-colors cursor-pointer ${
+              selectedDomain === 'heat'
+                ? 'bg-rose-600 text-white shadow-xs'
+                : 'bg-white text-rose-700 border border-rose-200 hover:bg-rose-50'
+            }`}
           >
             ☀️ Extreme Heat ({heatCount})
           </button>
           <button
+            type="button"
             onClick={() => setSelectedDomain('waterlogging')}
-            className={`btn ${selectedDomain === 'waterlogging' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ 
-              padding: '4px 10px', 
-              fontSize: '0.76rem',
-              borderColor: selectedDomain === 'waterlogging' ? '#06b6d4' : undefined,
-              color: selectedDomain === 'waterlogging' ? '#fff' : '#67e8f9'
-            }}
+            className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-colors cursor-pointer ${
+              selectedDomain === 'waterlogging'
+                ? 'bg-cyan-600 text-white shadow-xs'
+                : 'bg-white text-cyan-700 border border-cyan-200 hover:bg-cyan-50'
+            }`}
           >
             🌊 Waterlogging ({waterloggingCount})
           </button>
           <button
+            type="button"
             onClick={() => setSelectedDomain('water_shortage')}
-            className={`btn ${selectedDomain === 'water_shortage' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ 
-              padding: '4px 10px', 
-              fontSize: '0.76rem',
-              borderColor: selectedDomain === 'water_shortage' ? '#0284c7' : undefined,
-              color: selectedDomain === 'water_shortage' ? '#fff' : '#7dd3fc'
-            }}
+            className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-colors cursor-pointer ${
+              selectedDomain === 'water_shortage'
+                ? 'bg-sky-600 text-white shadow-xs'
+                : 'bg-white text-sky-700 border border-sky-200 hover:bg-sky-50'
+            }`}
           >
             💧 Water Shortage ({waterShortageCount})
           </button>
         </div>
 
         {/* Ward & Search Controls */}
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="flex gap-2 items-center flex-wrap">
           <select
             value={selectedWard}
             onChange={(e) => setSelectedWard(e.target.value)}
-            className="input-field"
-            style={{ padding: '4px 8px', fontSize: '0.76rem', width: 'auto', minWidth: '110px' }}
+            className="h-8 px-2.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-primary"
           >
             <option value="ALL">All Wards</option>
             {Array.from(new Set(outcomes.map(o => o.ward_id))).sort().map(w => (
@@ -202,48 +186,36 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
             placeholder="Search records / ID / notes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="input-field"
-            style={{ padding: '4px 10px', fontSize: '0.76rem', width: '180px' }}
+            className="h-8 px-3 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-primary w-48"
           />
         </div>
       </div>
 
-      {/* Privacy Guarantee & Provenance Stats Bar */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        flexWrap: 'wrap', 
-        gap: '12px',
-        background: 'rgba(15, 23, 42, 0.6)', 
-        padding: '12px 16px', 
-        borderRadius: '10px', 
-        border: '1px solid var(--border-subtle)',
-        marginBottom: '20px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ background: 'rgba(16, 185, 129, 0.2)', padding: '4px', borderRadius: '4px', color: '#34d399' }}>
+      {/* Privacy Guarantee & Stats Bar */}
+      <div className="flex justify-between items-center flex-wrap gap-3 bg-slate-50 p-3 rounded-xl border border-slate-200 mb-5">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-lg bg-emerald-100/60 text-emerald-800 border border-emerald-200">
             <Lock size={14} />
           </div>
           <div>
-            <div style={{ fontSize: '0.78rem', fontWeight: 600, color: '#f8fafc' }}>
+            <div className="text-xs font-bold text-primary">
               Privacy &amp; Non-PII Compliance Verified
             </div>
-            <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+            <div className="text-[11px] text-outline">
               All records are strictly aggregate ward counts. Names, contact numbers, and patient IDs are rejected at the API barrier.
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', fontSize: '0.78rem' }}>
-          <span style={{ color: '#cbd5e1' }}>
-            Showing: <strong>{filteredOutcomes.length}</strong> of {outcomes.length}
+        <div className="flex gap-3 items-center text-xs">
+          <span className="text-outline">
+            Showing <strong className="text-on-surface">{filteredOutcomes.length}</strong> of <strong className="text-on-surface">{outcomes.length}</strong>
           </span>
-          <span className="badge badge-real">
+          <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
             {realCount} Empirical Real
           </span>
           {simCount > 0 && (
-            <span className="badge badge-simulated">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-purple-50 text-purple-800 border border-purple-200">
               {simCount} Demo Simulated
             </span>
           )}
@@ -251,139 +223,116 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
       </div>
 
       {/* Table / Empty State */}
-      {filteredOutcomes.length === 0 ? (
-        <div className="empty-state" style={{ minHeight: '200px' }}>
-          <Database className="empty-state-icon" />
-          <h4 style={{ fontSize: '1rem', color: '#f8fafc', marginBottom: '6px' }}>No Verified Outcomes Matching Filter</h4>
-          <p style={{ maxWidth: '440px', fontSize: '0.82rem', color: '#94a3b8', marginBottom: '16px' }}>
+      {outcomes.length === 0 ? (
+        <div className="min-h-[200px] flex flex-col items-center justify-center p-8 bg-slate-50 border border-slate-200 rounded-xl text-center">
+          <Database className="w-10 h-10 text-slate-400 mb-2" />
+          <h4 className="text-sm font-bold text-on-surface mb-1">No Verified Outcomes Recorded</h4>
+          <p className="max-w-md text-xs text-on-surface-variant mb-3">
+            Ground-truth hospital admissions, 108 emergency calls, and water complaint logs have not been ingested yet.
+          </p>
+          <button 
+            onClick={() => setShowAddModal(true)} 
+            className="h-8 px-3.5 bg-primary text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 hover:bg-[#1B5742] shadow-xs transition-all cursor-pointer"
+          >
+            Log Municipal Outcome
+          </button>
+        </div>
+      ) : filteredOutcomes.length === 0 ? (
+        <div className="min-h-[200px] flex flex-col items-center justify-center p-8 bg-slate-50 border border-slate-200 rounded-xl text-center">
+          <Database className="w-10 h-10 text-slate-400 mb-2" />
+          <h4 className="text-sm font-bold text-on-surface mb-1">No Verified Outcomes Matching Filter</h4>
+          <p className="max-w-md text-xs text-on-surface-variant mb-3">
             No records matched the selected domain ({selectedDomain}) or ward criteria.
           </p>
           <button 
             onClick={() => { setSelectedDomain('ALL'); setSelectedWard('ALL'); setSearchQuery(''); }} 
-            className="btn btn-secondary"
-            style={{ fontSize: '0.8rem' }}
+            className="h-8 px-3.5 bg-slate-200 text-slate-800 rounded-lg text-xs font-semibold hover:bg-slate-300 transition-all cursor-pointer"
           >
             Reset Filters
           </button>
         </div>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table className="data-table">
+        <div className="overflow-x-auto rounded-xl border border-outline-variant bg-surface-container-lowest">
+          <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr>
-                <th>Outcome ID</th>
-                <th>Ward</th>
-                <th>Measurement Date</th>
-                <th>Domain</th>
-                <th>Observed Health &amp; Civic Indicators</th>
-                <th>Data Source</th>
-                <th>Confidence</th>
-                <th>Provenance Tier</th>
+              <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-mono text-outline uppercase tracking-wider">
+                <th className="py-2.5 px-3.5 font-semibold text-slate-700">Outcome ID</th>
+                <th className="py-2.5 px-3.5 font-semibold text-slate-700">Ward</th>
+                <th className="py-2.5 px-3.5 font-semibold text-slate-700">Measurement Date</th>
+                <th className="py-2.5 px-3.5 font-semibold text-slate-700">Domain</th>
+                <th className="py-2.5 px-3.5 font-semibold text-slate-700">Observed Health &amp; Civic Indicators</th>
+                <th className="py-2.5 px-3.5 font-semibold text-slate-700">Confidence</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-100">
               {filteredOutcomes.map(o => (
-                <tr key={o.outcome_id}>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: '#38bdf8' }}>
+                <tr key={o.outcome_id} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="py-3 px-3.5 font-mono text-xs font-bold text-primary">
                     {o.outcome_id}
                   </td>
-                  <td>
-                    <span style={{ fontWeight: 600 }}>{o.ward_name || o.ward_id}</span>
+                  <td className="py-3 px-3.5 font-semibold text-on-surface">
+                    {o.ward_name || o.ward_id}
                   </td>
-                  <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.78rem', color: '#cbd5e1' }}>
+                  <td className="py-3 px-3.5 font-mono text-xs text-outline">
                     {(o.measurement_date || '').slice(0, 10)}
-                    <span style={{ color: '#64748b', fontSize: '0.7rem', display: 'block' }}>
+                    <span className="text-[10px] text-slate-400 block font-sans">
                       Window: {o.measurement_window_hours || 24}h
                     </span>
                   </td>
-                  <td>
-                    <span style={{
-                      padding: '3px 8px',
-                      borderRadius: '6px',
-                      fontSize: '0.74rem',
-                      fontWeight: 600,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      background: o.hazard_type === 'waterlogging' 
-                        ? 'rgba(6, 182, 212, 0.15)' 
-                        : o.hazard_type === 'water_shortage' 
-                        ? 'rgba(56, 189, 248, 0.15)' 
-                        : 'rgba(244, 63, 94, 0.15)',
-                      color: o.hazard_type === 'waterlogging'
-                        ? '#22d3ee'
+                  <td className="py-3 px-3.5">
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border ${
+                      o.hazard_type === 'waterlogging'
+                        ? 'bg-cyan-50 text-cyan-800 border-cyan-200'
                         : o.hazard_type === 'water_shortage'
-                        ? '#38bdf8'
-                        : '#fb7185',
-                      border: `1px solid ${
-                        o.hazard_type === 'waterlogging'
-                          ? 'rgba(6, 182, 212, 0.3)'
-                          : o.hazard_type === 'water_shortage'
-                          ? 'rgba(56, 189, 248, 0.3)'
-                          : 'rgba(244, 63, 94, 0.3)'
-                      }`
-                    }}>
+                        ? 'bg-sky-50 text-sky-800 border-sky-200'
+                        : 'bg-rose-50 text-rose-800 border-rose-200'
+                    }`}>
                       {o.hazard_type === 'waterlogging' ? '🌊 Waterlogging' : o.hazard_type === 'water_shortage' ? '💧 Water Shortage' : '☀️ Heat'}
                     </span>
                   </td>
-                  <td>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', fontSize: '0.78rem' }}>
+                  <td className="py-3 px-3.5">
+                    <div className="flex flex-col gap-1 text-xs">
                       {o.hospital_heat_admissions > 0 && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fb7185' }}>
-                          <Activity size={12} />
+                        <div className="flex items-center gap-1.5 text-rose-700 font-medium">
+                          <Activity size={13} />
                           <span><strong>{o.hospital_heat_admissions}</strong> heatstroke inpatient cases</span>
                         </div>
                       )}
                       {o.emergency_108_calls > 0 && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#f59e0b' }}>
-                          <PhoneCall size={12} />
+                        <div className="flex items-center gap-1.5 text-amber-700 font-medium">
+                          <PhoneCall size={13} />
                           <span><strong>{o.emergency_108_calls}</strong> 108 ambulance dispatches</span>
                         </div>
                       )}
                       {o.water_scarcity_complaints > 0 && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#38bdf8' }}>
-                          <Droplets size={12} />
+                        <div className="flex items-center gap-1.5 text-sky-700 font-medium">
+                          <Droplets size={13} />
                           <span><strong>{o.water_scarcity_complaints}</strong> CCRS 155303 complaints</span>
                         </div>
                       )}
                       {o.waterlogging_depth_cm !== null && o.waterlogging_depth_cm !== undefined && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#06b6d4' }}>
-                          <Waves size={12} />
+                        <div className="flex items-center gap-1.5 text-teal-700 font-medium">
+                          <Waves size={13} />
                           <span><strong>{o.waterlogging_depth_cm} cm</strong> flood surcharge depth</span>
                         </div>
                       )}
                       {o.hospital_heat_admissions === 0 && o.emergency_108_calls === 0 && o.water_scarcity_complaints === 0 && !o.waterlogging_depth_cm && (
-                        <span style={{ color: '#10b981', fontSize: '0.75rem' }}>✓ Zero adverse events reported</span>
+                        <span className="text-emerald-700 text-xs font-semibold">✓ Zero adverse events reported</span>
                       )}
                     </div>
                   </td>
-                  <td>
-                    <span style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>
-                      {o.data_source || 'AMC_HEALTH_SURVEILLANCE'}
-                    </span>
-                  </td>
-                  <td>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <div style={{ 
-                        width: '42px', 
-                        height: '6px', 
-                        background: 'rgba(255,255,255,0.1)', 
-                        borderRadius: '3px',
-                        overflow: 'hidden' 
-                      }}>
-                        <div style={{ 
-                          width: `${Math.round((o.data_quality_score || 1.0) * 100)}%`, 
-                          height: '100%', 
-                          background: (o.data_quality_score || 1.0) >= 0.8 ? '#10b981' : '#f59e0b' 
-                        }} />
+                  <td className="py-3 px-3.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-11 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full ${(o.data_quality_score || 1.0) >= 0.8 ? 'bg-emerald-600' : 'bg-amber-500'}`}
+                          style={{ width: `${Math.round((o.data_quality_score || 1.0) * 100)}%` }}
+                        />
                       </div>
-                      <span style={{ fontSize: '0.75rem', fontFamily: 'var(--font-mono)', color: '#94a3b8' }}>
+                      <span className="font-mono text-[11px] text-outline font-semibold">
                         {Math.round((o.data_quality_score || 1.0) * 100)}%
                       </span>
                     </div>
-                  </td>
-                  <td>
-                    <ProvenanceBadge provenance={o.provenance} />
                   </td>
                 </tr>
               ))}
@@ -395,47 +344,39 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
       {/* Record Outcome Modal */}
       {showAddModal && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ padding: '24px', maxWidth: '580px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-              <h3 style={{ fontSize: '1.1rem', color: '#f8fafc' }}>
+          <div className="modal-content p-6 max-w-xl">
+            <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
+              <h3 className="text-base font-bold text-primary">
                 Ingest Verified Ground-Truth Outcome
               </h3>
               <button 
                 onClick={() => setShowAddModal(false)}
-                style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '1.2rem' }}
+                className="text-slate-400 hover:text-slate-600 text-lg cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <div style={{ 
-              background: 'rgba(16, 185, 129, 0.1)', 
-              border: '1px solid rgba(16, 185, 129, 0.25)', 
-              padding: '8px 12px', 
-              borderRadius: '8px', 
-              fontSize: '0.75rem', 
-              color: '#34d399',
-              marginBottom: '16px'
-            }}>
+            <div className="bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg text-xs text-emerald-800 mb-4">
               🔒 <strong>Non-PII Enforcement Active:</strong> Record only aggregate municipal metrics. Any personal names or telephone numbers will trigger strict rejection.
             </div>
 
             {error && (
-              <div style={{ padding: '10px 14px', background: 'rgba(244, 63, 94, 0.15)', border: '1px solid rgba(244, 63, 94, 0.3)', borderRadius: '8px', color: '#fb7185', fontSize: '0.82rem', marginBottom: '16px' }}>
+              <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700 mb-4 font-mono">
                 {error}
               </div>
             )}
 
-            <form onSubmit={handleSubmit}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+            <form onSubmit={handleSubmit} className="space-y-3.5">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '4px' }}>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Ahmedabad Ward *
                   </label>
                   <select 
                     value={form.ward_id}
                     onChange={e => setForm({ ...form, ward_id: e.target.value })}
-                    className="form-select"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   >
                     {wards.map(w => (
                       <option key={w.id || w.name} value={w.id || w.name}>
@@ -445,7 +386,7 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '4px' }}>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Measurement Date *
                   </label>
                   <input 
@@ -453,20 +394,20 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
                     required
                     value={form.measurement_date}
                     onChange={e => setForm({ ...form, measurement_date: e.target.value })}
-                    className="form-input"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '4px' }}>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
                     Hazard Domain *
                   </label>
                   <select 
                     value={form.hazard_type}
                     onChange={e => setForm({ ...form, hazard_type: e.target.value })}
-                    className="form-select"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   >
                     <option value="heat">Heatwave Surveillance</option>
                     <option value="waterlogging">Waterlogging / Pluvial Flood</option>
@@ -475,24 +416,24 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', color: '#cbd5e1', marginBottom: '4px' }}>
-                    Data Provenance Tier *
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Measurement Window
                   </label>
                   <select 
-                    value={form.provenance}
-                    onChange={e => setForm({ ...form, provenance: e.target.value })}
-                    className="form-select"
+                    value={form.measurement_window_hours}
+                    onChange={e => setForm({ ...form, measurement_window_hours: e.target.value })}
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   >
-                    <option value="REAL">REAL (Empirical municipal surveillance)</option>
-                    <option value="SIMULATED">SIMULATED (Hackathon drill / test)</option>
-                    <option value="ESTIMATED">ESTIMATED (Analytical proxy)</option>
+                    <option value={24}>24 Hours Aggregate</option>
+                    <option value={48}>48 Hours Post-Event</option>
+                    <option value={72}>72 Hours Evaluation</option>
                   </select>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '4px' }}>
+                  <label className="block text-xs text-slate-600 mb-1">
                     Hospital Heat Inpatients (cases)
                   </label>
                   <input 
@@ -500,11 +441,11 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
                     min="0"
                     value={form.hospital_heat_admissions}
                     onChange={e => setForm({ ...form, hospital_heat_admissions: e.target.value })}
-                    className="form-input"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '4px' }}>
+                  <label className="block text-xs text-slate-600 mb-1">
                     108 Ambulance Dispatches (calls)
                   </label>
                   <input 
@@ -512,14 +453,14 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
                     min="0"
                     value={form.emergency_108_calls}
                     onChange={e => setForm({ ...form, emergency_108_calls: e.target.value })}
-                    className="form-input"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '4px' }}>
+                  <label className="block text-xs text-slate-600 mb-1">
                     Water Complaints (CCRS 155303)
                   </label>
                   <input 
@@ -527,11 +468,11 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
                     min="0"
                     value={form.water_scarcity_complaints}
                     onChange={e => setForm({ ...form, water_scarcity_complaints: e.target.value })}
-                    className="form-input"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '4px' }}>
+                  <label className="block text-xs text-slate-600 mb-1">
                     Waterlogging Depth (cm)
                   </label>
                   <input 
@@ -541,51 +482,36 @@ export default function VerifiedOutcomesSection({ outcomes = [], wards = [], onO
                     placeholder="Optional cm"
                     value={form.waterlogging_depth_cm}
                     onChange={e => setForm({ ...form, waterlogging_depth_cm: e.target.value })}
-                    className="form-input"
+                    className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '4px' }}>
-                    Reporting Source / Agency
-                  </label>
-                  <input 
-                    type="text"
-                    value={form.data_source}
-                    onChange={e => setForm({ ...form, data_source: e.target.value })}
-                    className="form-input"
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', color: '#94a3b8', marginBottom: '4px' }}>
-                    Confidence Score (0.0 to 1.0)
-                  </label>
-                  <input 
-                    type="number"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    value={form.data_quality_score}
-                    onChange={e => setForm({ ...form, data_quality_score: e.target.value })}
-                    className="form-input"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs text-slate-600 mb-1">
+                  Verification Audit Notes
+                </label>
+                <input 
+                  type="text"
+                  placeholder="Official surveillance reference or hospital ward notice"
+                  value={form.verification_notes}
+                  onChange={e => setForm({ ...form, verification_notes: e.target.value })}
+                  className="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-200">
                 <button 
                   type="button" 
                   onClick={() => setShowAddModal(false)}
-                  className="btn btn-secondary"
+                  className="px-3.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
                   disabled={loading}
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit" 
-                  className="btn btn-primary"
+                  className="px-4 py-1.5 bg-primary text-white rounded-lg text-xs font-semibold hover:bg-[#1B5742] shadow-xs cursor-pointer disabled:opacity-60"
                   disabled={loading}
                 >
                   {loading ? 'Recording...' : 'Persist Municipal Observation'}
