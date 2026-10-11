@@ -2430,5 +2430,6 @@ def export_learning_loop_signals(
                 "updated_at": r.get("updated_at")
             })
 
+
     return signals
 
